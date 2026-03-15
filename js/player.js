@@ -11,20 +11,19 @@ const Player = {
   isMuted: false,
   isFullscreen: false,
 
-  // Stream source APIs (tried in order)
-  STREAM_APIS: [
-    (id) => `https://corsproxy.io/?${encodeURIComponent(`https://vidsrc.xyz/api/get?tmdb=${id}&type=movie`)}`,
-    (id) => `https://corsproxy.io/?${encodeURIComponent(`https://vidsrc.pro/api/get?tmdb=${id}&type=movie`)}`,
-  ],
+  // Stream source APIs (tried in order) — disabled, these CORS proxies are unreliable
+  STREAM_APIS: [],
 
-  // Fallback embed iframes — ordered by reliability (least anti-iframe detection first)
+  // Fallback embed iframes — ordered by reliability
   FALLBACK_EMBEDS: [
-    (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
     (id) => `https://player.videasy.net/movie/${id}`,
+    (id) => `https://embed.su/embed/movie/${id}`,
+    (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
     (id) => `https://autoembed.co/movie/tmdb/${id}`,
-    (id) => `https://www.2embed.cc/embed/${id}`,
-    (id) => `https://vidsrc.to/embed/movie/${id}`,
     (id) => `https://vidlink.pro/movie/${id}`,
+    (id) => `https://www.2embed.cc/embed/${id}`,
+    (id) => `https://vidsrc.cc/v2/embed/movie/${id}`,
+    (id) => `https://moviesapi.club/movie/${id}`,
   ],
 
   async init(movieId) {
