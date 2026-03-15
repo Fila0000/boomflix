@@ -14,7 +14,7 @@
       z-index: 9998; cursor: pointer;
       background: transparent;
     }
-    #clickGuard.visible {
+    #clickGuard.showPlay {
       background: rgba(0,0,0,0.4);
       display: flex; align-items: center; justify-content: center;
     }
@@ -39,108 +39,136 @@
     .srv-btn.active { background: #e50914; }
     .srv-btn:hover { background: rgba(255,255,255,0.3); }
     .srv-btn.active:hover { background: #ff1a1a; }
-    #adNotice {
+    #toast {
       position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
       background: rgba(229,9,20,0.9); color: white; padding: 8px 20px;
       border-radius: 8px; font-family: sans-serif; font-size: 13px;
       z-index: 10001; display: none; pointer-events: none;
-      animation: fadeout 2s ease forwards;
     }
-    @keyframes fadeout { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
   </style>
 </head>
 <body>
 <div id="player"></div>
-<div id="clickGuard" class="visible" onclick="handleGuardClick()">
-  <div class="play-circle">
+<div id="clickGuard" class="showPlay">
+  <div class="play-circle" id="playIcon">
     <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
   </div>
 </div>
-<div id="adNotice">Ad blocked — click again to continue</div>
+<div id="toast"></div>
 <div id="servers"></div>
 
 <script>
 // =============================================
-// AGGRESSIVE AD/POPUP BLOCKER
+// NUCLEAR AD BLOCKER
 // =============================================
 
-// 1. Kill window.open completely
-window.open = function() { return null; };
-Object.defineProperty(window, 'open', {
-  value: function() { return null; },
-  writable: false, configurable: false
-});
+// Freeze window.open permanently
+try {
+  Object.defineProperty(window, 'open', {
+    value: function() { return null; },
+    writable: false, configurable: false
+  });
+} catch(e) {
+  window.open = function() { return null; };
+}
 
-// 2. Block beforeunload hijacks
-Object.defineProperty(window, 'onbeforeunload', {
-  set: function(){}, get: function(){ return null; }, configurable: false
-});
+// Kill beforeunload
+try {
+  Object.defineProperty(window, 'onbeforeunload', {
+    set: function(){}, get: function(){ return null; }, configurable: false
+  });
+} catch(e) {}
 
-// 3. Prevent page navigation by ads
-var safeUrl = window.location.href;
-Object.defineProperty(window, 'location', {
-  get: function() { return document.location; }
-});
-
-// 4. Watch for and kill any new windows/tabs
-var tabCount = 0;
+// Re-enforce every 100ms in case embed overwrites
 setInterval(function() {
-  // Re-enforce popup block in case embed overwrites it
   try { window.open = function() { return null; }; } catch(e){}
-}, 200);
+}, 100);
 
-// 5. Block common ad domains via CSP meta tag injection
-var meta = document.createElement('meta');
-meta.httpEquiv = 'Content-Security-Policy';
-meta.content = "child-src blob: https://*.videasy.net https://*.embed.su https://*.multiembed.mov https://*.autoembed.co https://*.vidlink.pro https://*.2embed.cc https://*.vidsrc.cc https://*.moviesapi.club; popup-ancestors 'none';";
-document.head.appendChild(meta);
-
-// =============================================
-// CLICK GUARD SYSTEM
-// =============================================
-// Embeds trigger ad popups on: first click, play click, fullscreen click
-// We absorb clicks with a transparent guard that re-appears after each interaction
-
-var guardClicks = 0;
-var guard = document.getElementById('clickGuard');
-var notice = document.getElementById('adNotice');
-
-function handleGuardClick() {
-  guardClicks++;
-  if (guardClicks === 1) {
-    // First click: remove visible overlay, but keep transparent guard for 1 more click
-    guard.classList.remove('visible');
-    guard.innerHTML = '';
-  } else {
-    // Second click absorbed (this is usually the ad trigger)
-    guard.style.display = 'none';
-    showNotice();
-    // Re-enable guard after 3 seconds for fullscreen ad triggers
-    setTimeout(rearmGuard, 3000);
-  }
-}
-
-function rearmGuard() {
-  guard.style.display = 'block';
-  guard.classList.remove('visible');
-  guard.innerHTML = '';
-  guardClicks = 1; // Next click will dismiss and absorb
-}
-
-function showNotice() {
-  notice.style.display = 'block';
-  notice.style.animation = 'none';
-  notice.offsetHeight; // reflow
-  notice.style.animation = 'fadeout 2s ease forwards';
-  setTimeout(function() { notice.style.display = 'none'; }, 2100);
-}
-
-// Also intercept focus events (embeds open ads when they gain focus)
+// Snap focus back if ad steals it
 window.addEventListener('blur', function() {
-  setTimeout(function() {
-    window.focus();
-  }, 50);
+  setTimeout(function() { window.focus(); }, 100);
 });
+
+// =============================================
+// CLICK GUARD — absorbs ad clicks
+// =============================================
+// How embed ads work:
+//   Click 1 on iframe → ad popup fires
+//   Click 2 on iframe → ad popup fires
+//   Click 3+ → actual player controls work
+//
+// Our guard sits ON TOP of the iframe and absorbs clicks.
+// Each click: we hide guard briefly, let click "through" to iframe,
+// then immediately re-show guard. After enough clicks absorbed,
+// we remove guard permanently.
+
+var guard = document.getElementById('clickGuard');
+var playIcon = document.getElementById('playIcon');
+var clickCount = 0;
+var CLICKS_TO_ABSORB = 3; // absorb this many clicks before letting user interact freely
+
+guard.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  clickCount++;
+
+  if (clickCount === 1) {
+    // First click: just remove the play button overlay, keep guard transparent
+    guard.classList.remove('showPlay');
+    playIcon.style.display = 'none';
+    showToast('Click once more to start');
+    return;
+  }
+
+  if (clickCount <= CLICKS_TO_ABSORB) {
+    // Clicks 2-3: absorb silently (these are the ad trigger clicks)
+    showToast('Ad blocked ✓');
+    return;
+  }
+
+  // After enough absorbed, remove guard and let user interact with player
+  guard.style.display = 'none';
+  showToast('Player ready — enjoy!');
+
+  // Re-arm guard after 5s to catch fullscreen/play ad triggers
+  setTimeout(function() {
+    armPassiveGuard();
+  }, 5000);
+});
+
+// Passive guard: transparent overlay that absorbs ONE click then hides
+function armPassiveGuard() {
+  guard.style.display = 'block';
+  guard.classList.remove('showPlay');
+  playIcon.style.display = 'none';
+  guard.style.background = 'transparent';
+
+  // This guard absorbs one click (the ad) then hides
+  var absorbed = false;
+  guard.onclick = function(e) {
+    if (!absorbed) {
+      absorbed = true;
+      e.preventDefault();
+      e.stopPropagation();
+      showToast('Ad blocked ✓');
+      // Hide guard, re-arm again later
+      setTimeout(function() { guard.style.display = 'none'; }, 100);
+      setTimeout(armPassiveGuard, 8000);
+    }
+  };
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() {
+    t.style.opacity = '0';
+    setTimeout(function() { t.style.display = 'none'; }, 300);
+  }, 1500);
+}
 
 // =============================================
 // PLAYER
@@ -165,11 +193,13 @@ function loadServer(idx) {
   var url = SERVERS[idx](movieId);
   document.getElementById('player').innerHTML = '<iframe src="' + url + '" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>';
   renderServers(idx);
-  // Reset guard for new server
-  guardClicks = 0;
+  // Reset guard
+  clickCount = 0;
   guard.style.display = 'flex';
-  guard.classList.add('visible');
-  guard.innerHTML = '<div class="play-circle"><svg width="30" height="30" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg></div>';
+  guard.classList.add('showPlay');
+  guard.style.background = '';
+  playIcon.style.display = 'flex';
+  guard.onclick = null; // reset passive handler
 }
 
 function renderServers(active) {
