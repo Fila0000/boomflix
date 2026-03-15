@@ -60,15 +60,15 @@ const API = {
   },
 
   async trending(page = 1) {
-    return this._fetchFiltered('/trending/movie/week', { page });
+    return this.fetch('/trending/movie/week', { page });
   },
 
   async popular(page = 1) {
-    return this._fetchFiltered('/movie/popular', { page });
+    return this.fetch('/movie/popular', { page });
   },
 
   async topRated(page = 1) {
-    return this._fetchFiltered('/movie/top_rated', { page });
+    return this.fetch('/movie/top_rated', { page });
   },
 
   // "Now Playing" removed — use discoverStreamable instead
@@ -89,26 +89,22 @@ const API = {
     });
   },
 
-  // All-time popular streamable movies (no date restriction, just filtered)
+  // All-time popular by genre — no date cap, surfaces classics + new hits
   async byGenre(genreId, page = 1) {
-    const cutoff = this.streamingCutoffDate();
     return this.fetch('/discover/movie', {
       with_genres: genreId,
       page,
       sort_by: 'popularity.desc',
-      'release_date.lte': cutoff,
-      'vote_count.gte': 50
+      'vote_count.gte': 200
     });
   },
 
-  // Discover with full param control — always applies streamable cutoff
+  // Discover with full param control
   async discover(params = {}, page = 1) {
-    const cutoff = this.streamingCutoffDate();
     return this.fetch('/discover/movie', {
       page,
       sort_by: 'popularity.desc',
-      'release_date.lte': cutoff,
-      'vote_count.gte': 50,
+      'vote_count.gte': 100,
       ...params
     });
   },
