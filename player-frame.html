@@ -28,10 +28,11 @@
 </head>
 <body>
 <div id="player"></div>
+<div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:60px;z-index:9998;cursor:pointer;background:transparent;" onclick="this.style.display='none'"></div>
 <div id="servers"></div>
 
 <script>
-// Block popups — this is all we need
+// Block popups
 window.open = function() { return null; };
 setInterval(function() { try { window.open = function() { return null; }; } catch(e){} }, 200);
 
