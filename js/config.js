@@ -8,14 +8,14 @@ const CONFIG = {
   // Streaming embed providers — tested working March 2026
   // Order matters: most reliable first
   EMBED_SERVERS: [
-    { name: 'Server 1', url: (id) => `https://vidlink.pro/movie/${id}` },
-    { name: 'Server 2', url: (id) => `https://player.videasy.net/movie/${id}` },
-    { name: 'Server 3', url: (id) => `https://vidsrc.to/embed/movie/${id}` },
-    { name: 'Server 4', url: (id) => `https://vidsrcme.ru/embed/movie?tmdb=${id}` },
-    { name: 'Server 5', url: (id) => `https://vsembed.ru/embed/movie?tmdb=${id}` },
-    { name: 'Server 6', url: (id) => `https://www.2embed.cc/embed/${id}` },
-    { name: 'Server 7', url: (id) => `https://autoembed.co/movie/tmdb/${id}` },
-    { name: 'Server 8', url: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { name: 'Server 1', url: (id) => `https://vidsrc.to/embed/movie/${id}` },
+    { name: 'Server 2', url: (id) => `https://www.2embed.cc/embed/${id}` },
+    { name: 'Server 3', url: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { name: 'Server 4', url: (id) => `https://autoembed.co/movie/tmdb/${id}` },
+    { name: 'Server 5', url: (id) => `https://player.videasy.net/movie/${id}` },
+    { name: 'Server 6', url: (id) => `https://vidsrcme.ru/embed/movie?tmdb=${id}` },
+    { name: 'Server 7', url: (id) => `https://vsembed.ru/embed/movie?tmdb=${id}` },
+    { name: 'Server 8', url: (id) => `https://vidlink.pro/movie/${id}` },
   ],
   
   SITE_NAME: 'BoomFlix',

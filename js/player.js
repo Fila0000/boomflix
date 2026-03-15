@@ -17,16 +17,16 @@ const Player = {
     (id) => `https://corsproxy.io/?${encodeURIComponent(`https://vidsrc.pro/api/get?tmdb=${id}&type=movie`)}`,
   ],
 
-  // Fallback embed iframes — tested working March 2026
+  // Fallback embed iframes — ordered by iframe-friendliness (no anti-embed detection)
   FALLBACK_EMBEDS: [
-    (id) => `https://vidlink.pro/movie/${id}`,
-    (id) => `https://player.videasy.net/movie/${id}`,
     (id) => `https://vidsrc.to/embed/movie/${id}`,
+    (id) => `https://www.2embed.cc/embed/${id}`,
+    (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    (id) => `https://autoembed.co/movie/tmdb/${id}`,
+    (id) => `https://player.videasy.net/movie/${id}`,
     (id) => `https://vidsrcme.ru/embed/movie?tmdb=${id}`,
     (id) => `https://vsembed.ru/embed/movie?tmdb=${id}`,
-    (id) => `https://www.2embed.cc/embed/${id}`,
-    (id) => `https://autoembed.co/movie/tmdb/${id}`,
-    (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    (id) => `https://vidlink.pro/movie/${id}`,
   ],
 
   async init(movieId) {
