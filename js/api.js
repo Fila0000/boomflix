@@ -1,7 +1,7 @@
 // ===== BOOMFLIX API =====
 
-// Movies released within this many days are likely still in theaters — not on embed servers yet
-const STREAMING_DELAY_DAYS = 90;
+// Show all released movies — embed servers have content day-of-release
+const STREAMING_DELAY_DAYS = 0;
 
 const API = {
   // Returns a date string STREAMING_DELAY_DAYS ago (YYYY-MM-DD)
@@ -74,19 +74,18 @@ const API = {
   // "Now Playing" removed — use discoverStreamable instead
   // "Upcoming" removed — those movies aren't out yet
 
-  // Discover movies guaranteed to be on streaming (released 90–730 days ago, sorted by popularity)
+  // New releases — movies from the last 6 months, sorted by release date
   async recentlyStreaming(page = 1) {
-    const cutoff = this.streamingCutoffDate();
-    // 2 years back from the cutoff as the oldest
-    const oldest = new Date();
-    oldest.setFullYear(oldest.getFullYear() - 2);
-    const oldestStr = oldest.toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const oldestStr = sixMonthsAgo.toISOString().split('T')[0];
     return this.fetch('/discover/movie', {
       page,
-      sort_by: 'popularity.desc',
-      'release_date.lte': cutoff,
+      sort_by: 'release_date.desc',
+      'release_date.lte': today,
       'release_date.gte': oldestStr,
-      'vote_count.gte': 100
+      'vote_count.gte': 10
     });
   },
 

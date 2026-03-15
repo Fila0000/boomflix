@@ -168,7 +168,7 @@ async function loadSections() {
   await UI.renderSection(container, '🔥 Trending This Week', () => API.trending(), false);
   await UI.renderSection(container, '🎬 Popular Movies', () => API.popular(), false);
   await UI.renderSection(container, '⭐ Top Rated', () => API.topRated(), false);
-  await UI.renderSection(container, '🆕 Recently on Streaming', () => API.recentlyStreaming(), true);
+  await UI.renderSection(container, '🆕 New Releases', () => API.recentlyStreaming(), true);
   await UI.renderSection(container, '🚀 Action & Adventure', () => API.byGenre(28), false);
   await UI.renderSection(container, '😱 Horror', () => API.byGenre(27), false);
   await UI.renderSection(container, '🔭 Science Fiction', () => API.byGenre(878), false);
