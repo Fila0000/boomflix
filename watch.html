@@ -207,13 +207,14 @@ async function loadPage() {
     document.getElementById('relatedContent').appendChild(castSection);
   }
 
-  // Similar
-  const similar = movieData.similar?.results || [];
+  // Similar — filter to streamable only
+  const similar = API.filterStreamable(movieData.similar?.results || []);
   if (similar.length > 0) {
+    const filteredSimilar = { results: similar, total_results: similar.length };
     await UI.renderSection(
       document.getElementById('relatedContent'),
       'More Like This',
-      () => Promise.resolve(movieData.similar),
+      () => Promise.resolve(filteredSimilar),
       false
     );
   }

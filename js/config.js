@@ -1,16 +1,16 @@
 // ===== BOOMFLIX CONFIG =====
 const CONFIG = {
-  // TMDB API - Free key from themoviedb.org
+  // TMDB API
   TMDB_KEY: '8265bd1679663a7ea12ac168da84d2e8',
   TMDB_BASE: 'https://api.themoviedb.org/3',
   TMDB_IMG: 'https://image.tmdb.org/t/p',
   
-  // Streaming embed providers (pirated content hosts)
+  // Streaming embed providers — tested working as of March 2026
   EMBED_SERVERS: [
-    { name: 'Server 1', url: (id) => `https://vidsrc.to/embed/movie/${id}` },
-    { name: 'Server 2', url: (id) => `https://vidsrc.me/embed/movie?tmdb=${id}` },
-    { name: 'Server 3', url: (id) => `https://embed.su/embed/movie/${id}` },
-    { name: 'Server 4', url: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { name: 'Server 1', url: (id) => `https://autoembed.co/movie/tmdb/${id}` },
+    { name: 'Server 2', url: (id) => `https://vidsrc.to/embed/movie/${id}` },
+    { name: 'Server 3', url: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+    { name: 'Server 4', url: (id) => `https://vidsrc.me/embed/movie?tmdb=${id}` },
     { name: 'Server 5', url: (id) => `https://www.2embed.cc/embed/${id}` },
   ],
   

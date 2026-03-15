@@ -96,7 +96,11 @@ async function loadHero() {
   const data = await API.trending();
   if (!data || !data.results) return;
 
-  heroMovies.push(...data.results.slice(0, 5));
+  // trending() already filters to streamable — take top 5
+  const streamable = data.results.slice(0, 5);
+  if (streamable.length === 0) return;
+
+  heroMovies.push(...streamable);
   renderHeroIndicators();
   setHero(0);
   startHeroTimer();
@@ -164,13 +168,14 @@ async function loadSections() {
   await UI.renderSection(container, '🔥 Trending This Week', () => API.trending(), false);
   await UI.renderSection(container, '🎬 Popular Movies', () => API.popular(), false);
   await UI.renderSection(container, '⭐ Top Rated', () => API.topRated(), false);
-  await UI.renderSection(container, '🎭 Now Playing', () => API.nowPlaying(), true);
+  await UI.renderSection(container, '🆕 Recently on Streaming', () => API.recentlyStreaming(), true);
   await UI.renderSection(container, '🚀 Action & Adventure', () => API.byGenre(28), false);
   await UI.renderSection(container, '😱 Horror', () => API.byGenre(27), false);
   await UI.renderSection(container, '🔭 Science Fiction', () => API.byGenre(878), false);
   await UI.renderSection(container, '😂 Comedy', () => API.byGenre(35), false);
   await UI.renderSection(container, '💕 Romance', () => API.byGenre(10749), false);
-  await UI.renderSection(container, '📅 Coming Soon', () => API.upcoming(), true);
+  await UI.renderSection(container, '🎭 Drama', () => API.byGenre(18), false);
+  await UI.renderSection(container, '🔪 Thriller', () => API.byGenre(53), false);
 }
 
 // ===== SEARCH =====
