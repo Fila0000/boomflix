@@ -243,14 +243,14 @@ const Player = {
       return;
     }
 
-    const url = embeds[idx](this.movieId);
     this._currentEmbedIdx = idx;
 
-    // GitHub Pages sandboxes iframes — open embed in full page instead
+    // Open our clean player-frame page which blocks popups/redirects and embeds the stream
+    const playerUrl = `player-frame.html?id=${this.movieId}&s=${idx}`;
     wrapper.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
         <div style="text-align:center;">
-          <div onclick="window.open('${url}','_blank')" style="
+          <div onclick="window.open('${playerUrl}','_blank')" style="
             width:100px;height:100px;border-radius:50%;background:rgba(229,9,20,0.9);
             display:flex;align-items:center;justify-content:center;margin:0 auto 16px;cursor:pointer;
             transition:transform 0.2s;
@@ -258,12 +258,12 @@ const Player = {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
           </div>
           <div style="color:white;font-size:1.2rem;font-weight:600;margin-bottom:8px;">Click to Watch</div>
-          <div style="color:#aaa;font-size:0.8rem;">Opens in new tab for best playback</div>
+          <div style="color:#aaa;font-size:0.8rem;">Opens player with ad-blocking</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
           <span style="color:#aaa;font-size:0.75rem;">Server:</span>
-          ${embeds.map((_, i) => `
-            <button onclick="Player.loadFallbackEmbed(${i})"
+          ${this.FALLBACK_EMBEDS.map((_, i) => `
+            <button onclick="window.open('player-frame.html?id=${this.movieId}&s=${i}','_blank')"
               style="background:${i===idx?'#e50914':'rgba(255,255,255,0.15)'};border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
               ${i+1}
             </button>
