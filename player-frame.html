@@ -28,7 +28,7 @@
 </head>
 <body>
 <div id="player"></div>
-<div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:60px;z-index:9998;cursor:pointer;background:transparent;" onclick="this.style.display='none'"></div>
+<div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:60px;z-index:9998;cursor:pointer;background:transparent;" onclick="this.style.display='none';setTimeout(function(){document.getElementById('shield').style.display='block'},3000)"></div>
 <div id="servers"></div>
 
 <script>
@@ -38,6 +38,13 @@ setInterval(function() { try { window.open = function() { return null; }; } catc
 
 // Block focus stealing
 window.addEventListener('blur', function() { setTimeout(function() { window.focus(); }, 50); });
+
+// Block redirects — snap back if page navigates away
+var safeHref = window.location.href;
+setInterval(function() {
+  if (window.location.href !== safeHref) window.location.href = safeHref;
+}, 300);
+window.addEventListener('beforeunload', function(e) { e.preventDefault(); e.returnValue = ''; });
 
 var params = new URLSearchParams(window.location.search);
 var movieId = params.get('id');
