@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BoomFlix — Stream Anything Free</title>
+  <meta name="description" content="Stream thousands of movies and TV shows for free on BoomFlix. No signup required.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-gradient" id="navbar">
+  <div class="navbar-left">
+    <a href="index.html" class="logo">Boom<span>Flix</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="movies.html">Movies</a></li>
+      <li><a href="movies.html?genre=28">Action</a></li>
+      <li><a href="movies.html?genre=27">Horror</a></li>
+      <li><a href="movies.html?genre=878">Sci-Fi</a></li>
+    </ul>
+  </div>
+  <div class="navbar-right">
+    <button class="search-btn" id="searchToggle" title="Search">🔍</button>
+  </div>
+</nav>
+
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <button class="search-close" id="searchClose">✕</button>
+  <div class="search-box">
+    <span class="search-icon-inside">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search movies..." autocomplete="off" autofocus>
+  </div>
+  <div class="search-results-grid" id="searchResults"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-content" id="heroContent">
+    <div class="skeleton" style="width:80px;height:24px;border-radius:3px;margin-bottom:16px;"></div>
+    <div class="skeleton" style="width:400px;max-width:90%;height:60px;border-radius:4px;margin-bottom:16px;"></div>
+    <div class="skeleton" style="width:300px;max-width:80%;height:16px;border-radius:3px;margin-bottom:8px;"></div>
+    <div class="skeleton" style="width:250px;max-width:70%;height:16px;border-radius:3px;margin-bottom:28px;"></div>
+    <div style="display:flex;gap:12px;">
+      <div class="skeleton" style="width:120px;height:44px;border-radius:5px;"></div>
+      <div class="skeleton" style="width:140px;height:44px;border-radius:5px;"></div>
+    </div>
+  </div>
+  <div class="hero-indicators" id="heroIndicators"></div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main id="mainContent">
+  <!-- Sections injected by JS -->
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal"></div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="footer-logo">BoomFlix</a>
+  <div class="footer-links">
+    <a href="#">Audio Description</a>
+    <a href="#">Help Centre</a>
+    <a href="#">Gift Cards</a>
+    <a href="#">Media Centre</a>
+    <a href="#">Investor Relations</a>
+    <a href="#">Jobs</a>
+    <a href="#">Terms of Use</a>
+    <a href="#">Privacy</a>
+    <a href="#">Legal Notices</a>
+    <a href="#">Cookie Preferences</a>
+    <a href="#">Corporate Information</a>
+    <a href="#">Contact Us</a>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 BoomFlix. Movie data provided by TMDB. For entertainment purposes.</p>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+// ===== HERO =====
+const heroMovies = [];
+let heroIndex = 0;
+let heroTimer = null;
+
+async function loadHero() {
+  const data = await API.trending();
+  if (!data || !data.results) return;
+
+  heroMovies.push(...data.results.slice(0, 5));
+  renderHeroIndicators();
+  setHero(0);
+  startHeroTimer();
+}
+
+function setHero(index) {
+  heroIndex = index;
+  const movie = heroMovies[index];
+  if (!movie) return;
+
+  const bg = document.getElementById('heroBg');
+  const content = document.getElementById('heroContent');
+  const backdropUrl = API.backdrop(movie.backdrop_path || movie.poster_path, 'original');
+  const rating = API.formatRating(movie.vote_average);
+  const year = API.getYear(movie.release_date);
+  const genres = API.genreNames(movie.genre_ids || []);
+
+  bg.style.backgroundImage = `url(${backdropUrl})`;
+
+  content.innerHTML = `
+    <div class="hero-badge">🔥 Trending Now</div>
+    <h1 class="hero-title">${movie.title || 'Unknown Title'}</h1>
+    <div class="hero-meta">
+      <span class="hero-rating">★ ${rating}</span>
+      <span class="hero-year">${year}</span>
+      ${genres.map(g => `<span class="hero-year">${g}</span>`).join('')}
+      <span class="maturity-badge">PG-13</span>
+    </div>
+    <p class="hero-description">${movie.overview || ''}</p>
+    <div class="hero-buttons">
+      <a href="watch.html?id=${movie.id}" class="btn btn-play">▶ Play</a>
+      <button class="btn btn-info" onclick="Modal.open(${movie.id})">ⓘ More Info</button>
+    </div>
+  `;
+
+  // Update indicators
+  document.querySelectorAll('.hero-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === index);
+  });
+}
+
+function renderHeroIndicators() {
+  const container = document.getElementById('heroIndicators');
+  container.innerHTML = heroMovies.map((_, i) => `
+    <div class="hero-dot${i === 0 ? ' active' : ''}" onclick="setHero(${i}); resetHeroTimer();"></div>
+  `).join('');
+}
+
+function startHeroTimer() {
+  heroTimer = setInterval(() => {
+    const next = (heroIndex + 1) % heroMovies.length;
+    setHero(next);
+  }, 7000);
+}
+
+function resetHeroTimer() {
+  clearInterval(heroTimer);
+  startHeroTimer();
+}
+
+// ===== SECTIONS =====
+async function loadSections() {
+  const container = document.getElementById('mainContent');
+
+  await UI.renderSection(container, '🔥 Trending This Week', () => API.trending(), false);
+  await UI.renderSection(container, '🎬 Popular Movies', () => API.popular(), false);
+  await UI.renderSection(container, '⭐ Top Rated', () => API.topRated(), false);
+  await UI.renderSection(container, '🎭 Now Playing', () => API.nowPlaying(), true);
+  await UI.renderSection(container, '🚀 Action & Adventure', () => API.byGenre(28), false);
+  await UI.renderSection(container, '😱 Horror', () => API.byGenre(27), false);
+  await UI.renderSection(container, '🔭 Science Fiction', () => API.byGenre(878), false);
+  await UI.renderSection(container, '😂 Comedy', () => API.byGenre(35), false);
+  await UI.renderSection(container, '💕 Romance', () => API.byGenre(10749), false);
+  await UI.renderSection(container, '📅 Coming Soon', () => API.upcoming(), true);
+}
+
+// ===== SEARCH =====
+let searchTimer = null;
+
+document.getElementById('searchToggle').addEventListener('click', () => {
+  document.getElementById('searchOverlay').classList.add('active');
+  document.getElementById('searchInput').focus();
+});
+
+document.getElementById('searchClose').addEventListener('click', () => {
+  document.getElementById('searchOverlay').classList.remove('active');
+});
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) {
+    document.getElementById('searchResults').innerHTML = '';
+    return;
+  }
+  searchTimer = setTimeout(() => doSearch(q), 400);
+});
+
+async function doSearch(query) {
+  const container = document.getElementById('searchResults');
+  container.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
+
+  const data = await API.search(query);
+  container.innerHTML = '';
+
+  if (!data || !data.results || data.results.length === 0) {
+    container.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:1/-1;padding:20px;">No results found.</p>';
+    return;
+  }
+
+  data.results.slice(0, 12).forEach(movie => {
+    container.appendChild(UI.card(movie));
+  });
+}
+
+// Keyboard shortcut: / to open search
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && !e.target.matches('input, textarea')) {
+    e.preventDefault();
+    document.getElementById('searchOverlay').classList.add('active');
+    document.getElementById('searchInput').focus();
+  }
+});
+
+// ===== INIT =====
+UI.initNavbar();
+Modal.init();
+loadHero();
+loadSections();
+</script>
+</body>
+</html>

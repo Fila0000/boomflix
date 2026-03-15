@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movies — BoomFlix</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <style>
+    .filter-bar {
+      position: sticky;
+      top: 68px;
+      background: var(--dark);
+      z-index: 100;
+      padding: 14px 4%;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .sort-select {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--white);
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select:focus { border-color: rgba(255,255,255,0.5); }
+    .sort-select option { background: var(--dark2); }
+    .results-count {
+      color: var(--light-gray);
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+    .load-more-btn {
+      display: block;
+      margin: 30px auto;
+      padding: 14px 40px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      color: var(--white);
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .load-more-btn:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.5);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar solid" id="navbar">
+  <div class="navbar-left">
+    <a href="index.html" class="logo">Boom<span>Flix</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="movies.html" class="active">Movies</a></li>
+    </ul>
+  </div>
+  <div class="navbar-right">
+    <button class="search-btn" id="searchToggle" title="Search">🔍</button>
+  </div>
+</nav>
+
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <button class="search-close" id="searchClose">✕</button>
+  <div class="search-box">
+    <span class="search-icon-inside">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search movies..." autocomplete="off" autofocus>
+  </div>
+  <div class="search-results-grid" id="searchResults"></div>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <h1 id="pageTitle">All Movies</h1>
+  <p id="pageSubtitle">Browse thousands of movies</p>
+</div>
+
+<!-- GENRES -->
+<div class="section" style="padding-bottom:0;">
+  <div class="genres-row" id="genresRow">
+    <a href="movies.html" class="genre-pill" data-genre="">All</a>
+    <a href="movies.html?genre=28" class="genre-pill" data-genre="28">Action</a>
+    <a href="movies.html?genre=12" class="genre-pill" data-genre="12">Adventure</a>
+    <a href="movies.html?genre=16" class="genre-pill" data-genre="16">Animation</a>
+    <a href="movies.html?genre=35" class="genre-pill" data-genre="35">Comedy</a>
+    <a href="movies.html?genre=80" class="genre-pill" data-genre="80">Crime</a>
+    <a href="movies.html?genre=18" class="genre-pill" data-genre="18">Drama</a>
+    <a href="movies.html?genre=14" class="genre-pill" data-genre="14">Fantasy</a>
+    <a href="movies.html?genre=27" class="genre-pill" data-genre="27">Horror</a>
+    <a href="movies.html?genre=9648" class="genre-pill" data-genre="9648">Mystery</a>
+    <a href="movies.html?genre=10749" class="genre-pill" data-genre="10749">Romance</a>
+    <a href="movies.html?genre=878" class="genre-pill" data-genre="878">Sci-Fi</a>
+    <a href="movies.html?genre=53" class="genre-pill" data-genre="53">Thriller</a>
+    <a href="movies.html?genre=10752" class="genre-pill" data-genre="10752">War</a>
+    <a href="movies.html?genre=37" class="genre-pill" data-genre="37">Western</a>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <select class="sort-select" id="sortSelect">
+    <option value="popularity.desc">Most Popular</option>
+    <option value="vote_average.desc">Top Rated</option>
+    <option value="release_date.desc">Newest First</option>
+    <option value="release_date.asc">Oldest First</option>
+    <option value="revenue.desc">Highest Grossing</option>
+  </select>
+  <span class="results-count" id="resultsCount"></span>
+</div>
+
+<!-- MOVIES GRID -->
+<div class="movies-grid" id="moviesGrid">
+  <!-- Skeletons -->
+  ${Array.from({length: 18}, () => `<div class="skeleton" style="aspect-ratio:2/3;border-radius:6px;"></div>`).join('')}
+</div>
+
+<button class="load-more-btn" id="loadMoreBtn" style="display:none;">Load More</button>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal"></div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="footer-logo">BoomFlix</a>
+  <div class="footer-bottom">
+    <p>© 2025 BoomFlix. Movie data provided by TMDB.</p>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const genreId = params.get('genre') || '';
+let currentPage = 1;
+let totalPages = 1;
+let currentSort = 'popularity.desc';
+
+// Highlight active genre
+document.querySelectorAll('.genre-pill').forEach(pill => {
+  if (pill.dataset.genre === genreId) {
+    pill.classList.add('active');
+  }
+});
+
+// Update page title
+if (genreId && GENRES[parseInt(genreId)]) {
+  const name = GENRES[parseInt(genreId)];
+  document.getElementById('pageTitle').textContent = name + ' Movies';
+  document.getElementById('pageSubtitle').textContent = `Browse ${name} movies`;
+  document.title = `${name} Movies — BoomFlix`;
+}
+
+async function fetchMovies(page = 1, append = false) {
+  const grid = document.getElementById('moviesGrid');
+
+  if (!append) {
+    grid.innerHTML = Array.from({length: 18}, () => 
+      `<div class="skeleton" style="aspect-ratio:2/3;border-radius:6px;"></div>`
+    ).join('');
+  }
+
+  let data;
+  if (genreId) {
+    data = await API.fetch('/discover/movie', {
+      with_genres: genreId,
+      page,
+      sort_by: currentSort
+    });
+  } else {
+    if (currentSort === 'vote_average.desc') {
+      data = await API.topRated(page);
+    } else if (currentSort === 'release_date.desc') {
+      data = await API.nowPlaying(page);
+    } else {
+      data = await API.popular(page);
+    }
+  }
+
+  if (!append) grid.innerHTML = '';
+
+  if (data && data.results) {
+    totalPages = data.total_pages;
+    document.getElementById('resultsCount').textContent = 
+      `${(data.total_results || 0).toLocaleString()} movies`;
+
+    data.results.forEach(movie => {
+      const card = UI.card(movie);
+      card.style.minWidth = 'unset';
+      card.style.flex = 'unset';
+      grid.appendChild(card);
+    });
+
+    const loadBtn = document.getElementById('loadMoreBtn');
+    loadBtn.style.display = currentPage < Math.min(totalPages, 20) ? 'block' : 'none';
+  }
+}
+
+document.getElementById('sortSelect').addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  currentPage = 1;
+  fetchMovies(1, false);
+});
+
+document.getElementById('loadMoreBtn').addEventListener('click', () => {
+  currentPage++;
+  fetchMovies(currentPage, true);
+  document.getElementById('loadMoreBtn').style.display = 'none';
+});
+
+// Search
+document.getElementById('searchToggle').addEventListener('click', () => {
+  document.getElementById('searchOverlay').classList.add('active');
+  document.getElementById('searchInput').focus();
+});
+document.getElementById('searchClose').addEventListener('click', () => {
+  document.getElementById('searchOverlay').classList.remove('active');
+});
+let searchTimer = null;
+document.getElementById('searchInput').addEventListener('input', async (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) { document.getElementById('searchResults').innerHTML = ''; return; }
+  searchTimer = setTimeout(async () => {
+    const data = await API.search(q);
+    const container = document.getElementById('searchResults');
+    container.innerHTML = '';
+    if (data?.results) {
+      data.results.slice(0, 12).forEach(m => container.appendChild(UI.card(m)));
+    }
+  }, 400);
+});
+
+Modal.init();
+fetchMovies(1);
+</script>
+</body>
+</html>
