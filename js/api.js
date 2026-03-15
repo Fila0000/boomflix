@@ -1,4 +1,4 @@
-// ===== BOOMFLIX API =====
+// ===== EMILYFLIX API =====
 
 // Show all released movies — embed servers have content day-of-release
 const STREAMING_DELAY_DAYS = 0;

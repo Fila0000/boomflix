@@ -1,4 +1,4 @@
-// ===== BOOMFLIX CONFIG =====
+// ===== EMILYFLIX CONFIG =====
 const CONFIG = {
   // TMDB API
   TMDB_KEY: '8265bd1679663a7ea12ac168da84d2e8',
@@ -18,7 +18,7 @@ const CONFIG = {
     { name: 'Server 8', url: (id) => `https://vidlink.pro/movie/${id}` },
   ],
   
-  SITE_NAME: 'BoomFlix',
+  SITE_NAME: 'EmilyFlix',
   TAGLINE: 'Stream Anything. Free.',
 };
 

@@ -1,4 +1,4 @@
-// ===== BOOMFLIX NATIVE PLAYER =====
+// ===== EMILYFLIX NATIVE PLAYER =====
 // Fetches direct stream URLs and plays via HLS.js
 // Falls back to iframe if stream unavailable
 

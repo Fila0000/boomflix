@@ -1,4 +1,4 @@
-/* ===== BOOMFLIX - NETFLIX CLONE ===== */
+/* ===== EMILYFLIX - NETFLIX CLONE ===== */
 @import url('https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
@@ -980,7 +980,7 @@ footer {
   border-radius: 3px;
 }
 
-/* ===== BOOMFLIX NATIVE PLAYER ===== */
+/* ===== EMILYFLIX NATIVE PLAYER ===== */
 .bf-player {
   position: relative;
   width: 100%;

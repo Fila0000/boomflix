@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Watch — BoomFlix</title>
+  <title>Watch — EmilyFlix</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
   <style>
@@ -92,7 +92,7 @@
 <!-- NAVBAR -->
 <nav class="navbar solid" id="navbar">
   <div class="navbar-left">
-    <a href="index.html" class="logo">Boom<span>Flix</span></a>
+    <a href="index.html" class="logo">Emily<span>Flix</span></a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="movies.html">Movies</a></li>
@@ -165,7 +165,7 @@ async function loadPage() {
     return;
   }
 
-  document.title = `${movieData.title} — BoomFlix`;
+  document.title = `${movieData.title} — EmilyFlix`;
 
   const year = API.getYear(movieData.release_date);
   const rating = API.formatRating(movieData.vote_average);

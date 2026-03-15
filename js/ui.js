@@ -1,4 +1,4 @@
-// ===== BOOMFLIX UI HELPERS =====
+// ===== EMILYFLIX UI HELPERS =====
 const UI = {
   // Create a movie card element
   card(movie, wide = false) {
