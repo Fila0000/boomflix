@@ -246,6 +246,9 @@ const Player = {
       return;
     }
 
+    // Block all popup attempts from embeds
+    window.open = () => null;
+
     const url = embeds[idx](this.movieId);
     wrapper.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:#000;">
@@ -255,13 +258,11 @@ const Player = {
           allowfullscreen 
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           referrerpolicy="no-referrer"
-          sandbox="allow-scripts allow-forms allow-presentation allow-popups"
           style="width:100%;height:100%;border:none;display:block;"
         ></iframe>
-        <!-- Popup interceptor: absorbs the first click (which triggers ad popup),
-             shows a "Click to Play" overlay, then removes itself on second click -->
+        <!-- Popup shield: covers full player, absorbs first click that would trigger ad popup -->
         <div id="bfPopupShield" onclick="this.remove()" style="
-          position:absolute;top:0;left:0;right:0;bottom:40px;
+          position:absolute;top:0;left:0;right:0;bottom:0;
           cursor:pointer;z-index:10;
           display:flex;align-items:center;justify-content:center;
           background:rgba(0,0,0,0.45);
@@ -271,7 +272,6 @@ const Player = {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
             </div>
             <div style="color:white;font-size:1rem;font-weight:600;">Click to Play</div>
-            <div style="color:rgba(255,255,255,0.5);font-size:0.75rem;margin-top:4px;">Tap once to dismiss ads</div>
           </div>
         </div>
         <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
