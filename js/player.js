@@ -243,40 +243,27 @@ const Player = {
       return;
     }
 
-    // Block all popup attempts from embeds
-    window.open = () => null;
-
     const url = embeds[idx](this.movieId);
     this._currentEmbedIdx = idx;
+
+    // GitHub Pages sandboxes iframes — open embed in full page instead
     wrapper.innerHTML = `
-      <div style="position:relative;width:100%;height:100%;background:#000;">
-        <iframe
-          id="bfEmbedFrame"
-          src="${url}"
-          allowfullscreen
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-          referrerpolicy="no-referrer"
-          style="width:100%;height:100%;border:none;display:block;"
-          onload="Player._checkEmbedHealth(${idx})"
-        ></iframe>
-        <!-- Popup shield: covers full player, absorbs first click that would trigger ad popup -->
-        <div id="bfPopupShield" onclick="this.remove()" style="
-          position:absolute;top:0;left:0;right:0;bottom:0;
-          cursor:pointer;z-index:10;
-          display:flex;align-items:center;justify-content:center;
-          background:rgba(0,0,0,0.45);
-        ">
-          <div style="text-align:center;pointer-events:none;">
-            <div style="width:72px;height:72px;border-radius:50%;background:rgba(229,9,20,0.9);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
-            </div>
-            <div style="color:white;font-size:1rem;font-weight:600;">Click to Play</div>
+      <div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+        <div style="text-align:center;">
+          <div onclick="window.open('${url}','_blank')" style="
+            width:100px;height:100px;border-radius:50%;background:rgba(229,9,20,0.9);
+            display:flex;align-items:center;justify-content:center;margin:0 auto 16px;cursor:pointer;
+            transition:transform 0.2s;
+          " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
           </div>
+          <div style="color:white;font-size:1.2rem;font-weight:600;margin-bottom:8px;">Click to Watch</div>
+          <div style="color:#aaa;font-size:0.8rem;">Opens in new tab for best playback</div>
         </div>
-        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:8px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
           <span style="color:#aaa;font-size:0.75rem;">Server:</span>
           ${embeds.map((_, i) => `
-            <button onclick="Player.loadFallbackEmbed(${i})" 
+            <button onclick="Player.loadFallbackEmbed(${i})"
               style="background:${i===idx?'#e50914':'rgba(255,255,255,0.15)'};border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
               ${i+1}
             </button>
