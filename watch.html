@@ -137,20 +137,25 @@
 <!-- MODAL -->
 <div class="modal-overlay" id="modal"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/player.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const movieId = params.get('id');
-let currentServer = 0;
 let movieData = null;
 
 if (!movieId) {
   window.location.href = 'index.html';
 }
 
-async function loadPlayer() {
+async function loadPage() {
+  // Init native player
+  await Player.init(movieId);
+
+  // Fetch movie metadata
   movieData = await API.details(movieId);
   if (!movieData) {
     document.getElementById('playerInfo').innerHTML = `
@@ -160,13 +165,8 @@ async function loadPlayer() {
     return;
   }
 
-  // Update page title
   document.title = `${movieData.title} — BoomFlix`;
 
-  // Render player
-  renderPlayer(0);
-
-  // Render info
   const year = API.getYear(movieData.release_date);
   const rating = API.formatRating(movieData.vote_average);
   const runtime = API.formatRuntime(movieData.runtime);
@@ -182,16 +182,6 @@ async function loadPlayer() {
       <span style="border:1px solid #555;padding:2px 7px;font-size:0.7rem;border-radius:3px;color:#aaa;">HD</span>
       ${genres.slice(0, 3).map(g => `<span style="background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:20px;font-size:0.75rem;">${g}</span>`).join('')}
     </div>
-
-    <div class="server-selector">
-      <h3>Streaming Servers</h3>
-      <div class="server-btns" id="serverBtns">
-        ${CONFIG.EMBED_SERVERS.map((s, i) => `
-          <button class="server-btn${i === 0 ? ' active' : ''}" onclick="renderPlayer(${i})">${s.name}</button>
-        `).join('')}
-      </div>
-    </div>
-
     <p class="player-description">${movieData.overview || ''}</p>
   `;
 
@@ -205,7 +195,7 @@ async function loadPlayer() {
       <div class="cast-row">
         ${cast.map(p => `
           <div class="cast-card">
-            <img src="${p.profile_path ? API.img(p.profile_path, 'w185') : 'https://via.placeholder.com/80x80/1a1a1a/555?text=?'}" 
+            <img src="${p.profile_path ? API.img(p.profile_path, 'w185') : 'https://via.placeholder.com/80x80/1a1a1a/555?text=?'}"
                  alt="${p.name}" loading="lazy"
                  onerror="this.src='https://via.placeholder.com/80x80/1a1a1a/555?text=?'">
             <div class="cast-name">${p.name}</div>
@@ -217,7 +207,7 @@ async function loadPlayer() {
     document.getElementById('relatedContent').appendChild(castSection);
   }
 
-  // Similar movies
+  // Similar
   const similar = movieData.similar?.results || [];
   if (similar.length > 0) {
     await UI.renderSection(
@@ -229,32 +219,10 @@ async function loadPlayer() {
   }
 }
 
-function renderPlayer(serverIndex) {
-  currentServer = serverIndex;
-  const url = CONFIG.EMBED_SERVERS[serverIndex].url(movieId);
-  const wrapper = document.getElementById('playerWrapper');
-
-  wrapper.innerHTML = `
-    <iframe 
-      src="${url}" 
-      allowfullscreen 
-      allow="autoplay; fullscreen; encrypted-media"
-      referrerpolicy="no-referrer"
-      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
-    ></iframe>
-  `;
-
-  // Update server buttons
-  document.querySelectorAll('.server-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', i === serverIndex);
-  });
-}
-
-// Search functionality
+// Search
 document.getElementById('searchClose')?.addEventListener('click', () => {
   document.getElementById('searchOverlay').classList.remove('active');
 });
-
 document.getElementById('searchInput')?.addEventListener('input', async (e) => {
   const q = e.target.value.trim();
   if (!q) { document.getElementById('searchResults').innerHTML = ''; return; }
@@ -267,7 +235,7 @@ document.getElementById('searchInput')?.addEventListener('input', async (e) => {
 });
 
 Modal.init();
-loadPlayer();
+loadPage();
 </script>
 </body>
 </html>

@@ -979,3 +979,299 @@ footer {
   color: var(--light-gray);
   border-radius: 3px;
 }
+
+/* ===== BOOMFLIX NATIVE PLAYER ===== */
+.bf-player {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.bf-player video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #000;
+}
+
+.bf-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* Center play button */
+.bf-center-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.2s;
+  opacity: 0.9;
+}
+.bf-center-play:hover { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+.bf-center-play svg { width: 80px; height: 80px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8)); }
+
+/* Spinner */
+.bf-spinner-wrap {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 6;
+  background: rgba(0,0,0,0.4);
+}
+.bf-spin {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: #e50914;
+  border-radius: 50%;
+  animation: bfSpin 0.8s linear infinite;
+}
+@keyframes bfSpin { to { transform: rotate(360deg); } }
+.bf-spinner-wrap p {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Controls */
+.bf-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85) 60%);
+  padding: 40px 16px 12px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.bf-controls.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Progress bar */
+.bf-progress-wrap {
+  padding: 6px 0;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.bf-progress-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  transition: height 0.15s;
+}
+.bf-progress-wrap:hover .bf-progress-bar { height: 6px; }
+.bf-buffered {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  width: 0;
+  transition: width 0.5s;
+}
+.bf-played {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: #e50914;
+  border-radius: 2px;
+  width: 0;
+}
+.bf-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 14px;
+  height: 14px;
+  background: #e50914;
+  border-radius: 50%;
+  left: 0;
+  transition: transform 0.15s;
+  box-shadow: 0 0 4px rgba(229,9,20,0.8);
+}
+.bf-progress-wrap:hover .bf-thumb { transform: translate(-50%, -50%) scale(1); }
+
+/* Bottom row */
+.bf-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bf-left-controls, .bf-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Buttons */
+.bf-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.bf-btn:hover { background: rgba(255,255,255,0.15); }
+.bf-btn svg { width: 22px; height: 22px; display: block; }
+
+/* Volume */
+.bf-vol-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bf-vol-slider {
+  -webkit-appearance: none;
+  width: 0;
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: width 0.2s;
+}
+.bf-vol-group:hover .bf-vol-slider { width: 72px; }
+.bf-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: -60px 0 0 60px rgba(255,255,255,0.9);
+}
+
+/* Time */
+.bf-time {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Quality menu */
+.bf-quality-wrap { position: relative; }
+.bf-quality-btn {
+  background: rgba(255,255,255,0.15) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  color: white;
+  font-size: 0.75rem;
+  padding: 4px 10px !important;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bf-quality-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: rgba(20,20,20,0.97);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 100px;
+  display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.bf-quality-menu.open { display: block; }
+.bf-q-item {
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transition: background 0.15s;
+}
+.bf-q-item:hover { background: rgba(255,255,255,0.1); }
+
+/* Server bar */
+.bf-server-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: linear-gradient(rgba(0,0,0,0.7), transparent);
+  padding: 12px 16px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.bf-server-bar.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+.bf-server-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.75rem;
+}
+.bf-srv {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.8);
+  padding: 3px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bf-srv.active { background: #e50914; border-color: #e50914; color: white; }
+.bf-srv:hover:not(.active) { background: rgba(255,255,255,0.22); }
+
+/* Error state */
+.bf-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #0a0a0a;
+  z-index: 20;
+  text-align: center;
+  padding: 20px;
+}
+.bf-error p {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.95rem;
+  margin: 0;
+}
+.bf-error div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+
+/* Fullscreen tweaks */
+.bf-player:-webkit-full-screen { width: 100%; height: 100%; }
+.bf-player:fullscreen { width: 100%; height: 100%; }
