@@ -9,6 +9,25 @@
     html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
     #player { width: 100%; height: 100%; position: relative; }
     #player iframe { width: 100%; height: 100%; border: none; display: block; }
+    #screenSharePip {
+      position: fixed; top: 12px; right: 12px; z-index: 10001;
+      background: rgba(0,0,0,0.85); border: 1px solid #333; border-radius: 10px;
+      overflow: hidden; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    #screenSharePip video {
+      width: 280px; height: auto; display: block;
+    }
+    #screenSharePip .pip-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; background: rgba(229,9,20,0.9);
+    }
+    #screenSharePip .pip-bar span {
+      color: white; font-size: 11px; font-family: sans-serif; font-weight: 600;
+    }
+    #screenSharePip .pip-close {
+      background: none; border: none; color: white; cursor: pointer;
+      font-size: 16px; line-height: 1;
+    }
     #servers {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.9));
@@ -24,11 +43,30 @@
     .srv-btn.active { background: #e50914; }
     .srv-btn:hover { background: rgba(255,255,255,0.3); }
     .srv-btn.active:hover { background: #ff1a1a; }
+    .share-btn {
+      background: rgba(229,9,20,0.8); border: none; color: white;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer;
+      font-size: 13px; font-family: sans-serif; display: flex;
+      align-items: center; gap: 5px; margin-left: auto;
+    }
+    .share-btn:hover { background: rgba(229,9,20,1); }
+    .share-btn.active { background: #46d369; }
+    .share-btn svg { width: 14px; height: 14px; fill: white; }
   </style>
 </head>
 <body>
 <div id="player"></div>
 <div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:60px;z-index:9998;cursor:pointer;background:transparent;" onclick="this.style.display='none';setTimeout(function(){document.getElementById('shield').style.display='block'},3000)"></div>
+
+<!-- Screen share PiP preview -->
+<div id="screenSharePip">
+  <div class="pip-bar">
+    <span>🔴 Sharing Screen</span>
+    <button class="pip-close" onclick="stopScreenShare()">✕</button>
+  </div>
+  <video id="pipVideo" autoplay muted></video>
+</div>
+
 <div id="servers"></div>
 
 <script>
@@ -39,13 +77,70 @@ setInterval(function() { try { window.open = function() { return null; }; } catc
 // Block focus stealing
 window.addEventListener('blur', function() { setTimeout(function() { window.focus(); }, 50); });
 
-// Block redirects — snap back if page navigates away
+// Block redirects
 var safeHref = window.location.href;
 setInterval(function() {
   if (window.location.href !== safeHref) window.location.href = safeHref;
 }, 300);
 window.addEventListener('beforeunload', function(e) { e.preventDefault(); e.returnValue = ''; });
 
+// =============================================
+// SCREEN SHARING
+// =============================================
+var screenStream = null;
+
+async function toggleScreenShare() {
+  if (screenStream) {
+    stopScreenShare();
+    return;
+  }
+
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: true
+    });
+
+    // Show PiP preview
+    var pipVideo = document.getElementById('pipVideo');
+    pipVideo.srcObject = screenStream;
+    document.getElementById('screenSharePip').style.display = 'block';
+
+    // Update button
+    var btn = document.getElementById('shareBtn');
+    if (btn) {
+      btn.classList.add('active');
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/><path d="M10 12l5-3v6z"/></svg> Sharing';
+    }
+
+    // When user stops sharing via browser UI
+    screenStream.getVideoTracks()[0].onended = function() {
+      stopScreenShare();
+    };
+  } catch (err) {
+    console.log('Screen share cancelled or denied');
+  }
+}
+
+function stopScreenShare() {
+  if (screenStream) {
+    screenStream.getTracks().forEach(function(t) { t.stop(); });
+    screenStream = null;
+  }
+  document.getElementById('screenSharePip').style.display = 'none';
+  var pipVideo = document.getElementById('pipVideo');
+  pipVideo.srcObject = null;
+
+  var btn = document.getElementById('shareBtn');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/><path d="M10 8v8l5-4z"/></svg> Share Screen';
+  }
+}
+
+// =============================================
+// PLAYER
+// =============================================
 var params = new URLSearchParams(window.location.search);
 var movieId = params.get('id');
 var serverIdx = parseInt(params.get('s') || '0');
@@ -73,6 +168,7 @@ function renderServers(active) {
   for (var i = 0; i < SERVERS.length; i++) {
     html += '<button class="srv-btn ' + (i===active?'active':'') + '" onclick="loadServer(' + i + ')">' + (i+1) + '</button>';
   }
+  html += '<button class="share-btn" id="shareBtn" onclick="toggleScreenShare()"><svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/><path d="M10 8v8l5-4z"/></svg> Share Screen</button>';
   el.innerHTML = html;
 }
 
