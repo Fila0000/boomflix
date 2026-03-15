@@ -17,15 +17,13 @@ const Player = {
     (id) => `https://corsproxy.io/?${encodeURIComponent(`https://vidsrc.pro/api/get?tmdb=${id}&type=movie`)}`,
   ],
 
-  // Fallback embed iframes — ordered by iframe-friendliness (no anti-embed detection)
+  // Fallback embed iframes — ordered by reliability (least anti-iframe detection first)
   FALLBACK_EMBEDS: [
-    (id) => `https://vidsrc.to/embed/movie/${id}`,
-    (id) => `https://www.2embed.cc/embed/${id}`,
     (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
-    (id) => `https://autoembed.co/movie/tmdb/${id}`,
     (id) => `https://player.videasy.net/movie/${id}`,
-    (id) => `https://vidsrcme.ru/embed/movie?tmdb=${id}`,
-    (id) => `https://vsembed.ru/embed/movie?tmdb=${id}`,
+    (id) => `https://autoembed.co/movie/tmdb/${id}`,
+    (id) => `https://www.2embed.cc/embed/${id}`,
+    (id) => `https://vidsrc.to/embed/movie/${id}`,
     (id) => `https://vidlink.pro/movie/${id}`,
   ],
 
@@ -250,15 +248,17 @@ const Player = {
     window.open = () => null;
 
     const url = embeds[idx](this.movieId);
+    this._currentEmbedIdx = idx;
     wrapper.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:#000;">
-        <iframe 
+        <iframe
           id="bfEmbedFrame"
-          src="${url}" 
-          allowfullscreen 
+          src="${url}"
+          allowfullscreen
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           referrerpolicy="no-referrer"
           style="width:100%;height:100%;border:none;display:block;"
+          onload="Player._checkEmbedHealth(${idx})"
         ></iframe>
         <!-- Popup shield: covers full player, absorbs first click that would trigger ad popup -->
         <div id="bfPopupShield" onclick="this.remove()" style="
@@ -569,6 +569,32 @@ const Player = {
         </button>
       `).join('');
     }
+  },
+
+  _checkEmbedHealth(idx) {
+    // Auto-skip to next server after 5s if iframe appears blocked/empty
+    setTimeout(() => {
+      try {
+        const frame = document.getElementById('bfEmbedFrame');
+        if (!frame) return;
+        // If we're still on this embed index and user hasn't manually switched
+        if (this._currentEmbedIdx === idx) {
+          // Try to detect sandbox error by checking if iframe body is tiny (error page)
+          try {
+            const doc = frame.contentDocument || frame.contentWindow?.document;
+            const text = doc?.body?.innerText || '';
+            if (text.includes('Sandbox') || text.includes('sandbox') || text.includes('blocked')) {
+              console.warn(`Server ${idx+1} blocked, trying next...`);
+              if (idx + 1 < this.FALLBACK_EMBEDS.length) {
+                this.loadFallbackEmbed(idx + 1);
+              }
+            }
+          } catch(e) {
+            // Cross-origin — can't read, that's normal and means it loaded
+          }
+        }
+      } catch(e) {}
+    }, 4000);
   },
 
   fmtTime(s) {
