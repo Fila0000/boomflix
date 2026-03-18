@@ -13,42 +13,50 @@
 <!-- NAVBAR -->
 <nav class="navbar navbar-gradient" id="navbar">
   <div class="navbar-left">
-    <a href="index.html" class="logo">Emily<span>Flix</span></a>
+    <a href="index.html" class="logo">EmilyFlix</a>
     <ul class="nav-links">
       <li><a href="index.html" class="active">Home</a></li>
-      <li><a href="movies.html">Movies</a></li>
       <li><a href="tv.html">TV Shows</a></li>
-      <li><a href="movies.html?genre=28">Action</a></li>
-      <li><a href="movies.html?genre=27">Horror</a></li>
+      <li><a href="movies.html">Movies</a></li>
+      <li><a href="movies.html?genre=28">New &amp; Popular</a></li>
     </ul>
-    <span style="color:#aaa;font-size:12px;margin-left:12px;font-style:italic;">Made for a mother who needs a break — only 1 ad 😂</span>
+    <span class="tagline">Made for a mother who needs a break — only 1 ad</span>
   </div>
   <div class="navbar-right">
-    <button class="search-btn" id="searchToggle" title="Search">🔍</button>
+    <button class="search-btn" id="searchToggle" title="Search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+    </button>
+    <button class="nav-icon-btn" title="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+      <span class="notification-dot"></span>
+    </button>
+    <div class="profile-avatar" title="Emily">E</div>
   </div>
 </nav>
 
 <!-- SEARCH OVERLAY -->
 <div class="search-overlay" id="searchOverlay">
-  <button class="search-close" id="searchClose">✕</button>
+  <button class="search-close" id="searchClose">&#10005;</button>
   <div class="search-box">
-    <span class="search-icon-inside">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search movies & TV shows..." autocomplete="off" autofocus>
+    <span class="search-icon-inside">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+    </span>
+    <input type="text" id="searchInput" placeholder="Titles, people, genres" autocomplete="off" autofocus>
   </div>
   <div class="search-results-grid" id="searchResults"></div>
 </div>
 
-<!-- HERO -->
+<!-- HERO / BILLBOARD -->
 <section class="hero" id="hero">
   <div class="hero-bg" id="heroBg"></div>
   <div class="hero-content" id="heroContent">
-    <div class="skeleton" style="width:80px;height:24px;border-radius:3px;margin-bottom:16px;"></div>
-    <div class="skeleton" style="width:400px;max-width:90%;height:60px;border-radius:4px;margin-bottom:16px;"></div>
-    <div class="skeleton" style="width:300px;max-width:80%;height:16px;border-radius:3px;margin-bottom:8px;"></div>
-    <div class="skeleton" style="width:250px;max-width:70%;height:16px;border-radius:3px;margin-bottom:28px;"></div>
-    <div style="display:flex;gap:12px;">
-      <div class="skeleton" style="width:120px;height:44px;border-radius:5px;"></div>
-      <div class="skeleton" style="width:140px;height:44px;border-radius:5px;"></div>
+    <div class="skeleton" style="width:80px;height:20px;border-radius:3px;margin-bottom:16px;"></div>
+    <div class="skeleton" style="width:400px;max-width:90%;height:48px;border-radius:4px;margin-bottom:14px;"></div>
+    <div class="skeleton" style="width:300px;max-width:80%;height:14px;border-radius:3px;margin-bottom:6px;"></div>
+    <div class="skeleton" style="width:250px;max-width:70%;height:14px;border-radius:3px;margin-bottom:24px;"></div>
+    <div style="display:flex;gap:10px;">
+      <div class="skeleton" style="width:110px;height:40px;border-radius:4px;"></div>
+      <div class="skeleton" style="width:130px;height:40px;border-radius:4px;"></div>
     </div>
   </div>
   <div class="hero-indicators" id="heroIndicators"></div>
@@ -64,7 +72,12 @@
 
 <!-- FOOTER -->
 <footer>
-  <a href="index.html" class="footer-logo">EmilyFlix</a>
+  <div class="footer-social">
+    <a href="#" title="Facebook">&#xf09a;</a>
+    <a href="#" title="Instagram">&#xf16d;</a>
+    <a href="#" title="Twitter">&#xf099;</a>
+    <a href="#" title="YouTube">&#xf167;</a>
+  </div>
   <div class="footer-links">
     <a href="#">Audio Description</a>
     <a href="#">Help Centre</a>
@@ -79,8 +92,9 @@
     <a href="#">Corporate Information</a>
     <a href="#">Contact Us</a>
   </div>
+  <button class="footer-service-code">Service Code</button>
   <div class="footer-bottom">
-    <p>© 2025 EmilyFlix. Movie data provided by TMDB. For entertainment purposes.</p>
+    <p>&copy; 2025 EmilyFlix. Movie data provided by TMDB.</p>
   </div>
 </footer>
 
@@ -97,7 +111,6 @@ async function loadHero() {
   const data = await API.trending();
   if (!data || !data.results) return;
 
-  // trending() already filters to streamable — take top 5
   const streamable = data.results.slice(0, 5);
   if (streamable.length === 0) return;
 
@@ -115,25 +128,36 @@ function setHero(index) {
   const bg = document.getElementById('heroBg');
   const content = document.getElementById('heroContent');
   const backdropUrl = API.backdrop(movie.backdrop_path || movie.poster_path, 'original');
-  const rating = API.formatRating(movie.vote_average);
+  const matchPct = Math.round((movie.vote_average || 0) * 10);
   const year = API.getYear(movie.release_date);
   const genres = API.genreNames(movie.genre_ids || []);
 
   bg.style.backgroundImage = `url(${backdropUrl})`;
 
+  // Generate a maturity rating from genre
+  const maturityRating = getMaturityRating(movie.genre_ids || []);
+
   content.innerHTML = `
-    <div class="hero-badge">🔥 Trending Now</div>
+    <div class="hero-badge">
+      <span class="hero-badge-icon">N</span> S E R I E S
+    </div>
     <h1 class="hero-title">${movie.title || 'Unknown Title'}</h1>
     <div class="hero-meta">
-      <span class="hero-rating">★ ${rating}</span>
+      <span class="hero-match">${matchPct}% Match</span>
       <span class="hero-year">${year}</span>
-      ${genres.map(g => `<span class="hero-year">${g}</span>`).join('')}
-      <span class="maturity-badge">PG-13</span>
+      <span class="maturity-badge">${maturityRating}</span>
+      ${genres.slice(0, 2).map(g => `<span style="color:#bcbcbc;">${g}</span>`).join('<span style="color:#555;"> &bull; </span>')}
     </div>
     <p class="hero-description">${movie.overview || ''}</p>
     <div class="hero-buttons">
-      <a href="watch.html?id=${movie.id}" class="btn btn-play">▶ Play</a>
-      <button class="btn btn-info" onclick="Modal.open(${movie.id})">ⓘ More Info</button>
+      <a href="watch.html?id=${movie.id}" class="btn btn-play">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#111"><polygon points="4,2 20,12 4,22"/></svg>
+        Play
+      </a>
+      <button class="btn btn-info" onclick="Modal.open(${movie.id})">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="8" r="1"/></svg>
+        More Info
+      </button>
     </div>
   `;
 
@@ -141,6 +165,13 @@ function setHero(index) {
   document.querySelectorAll('.hero-dot').forEach((dot, i) => {
     dot.classList.toggle('active', i === index);
   });
+}
+
+function getMaturityRating(genreIds) {
+  if (genreIds.includes(27) || genreIds.includes(53)) return 'TV-MA';
+  if (genreIds.includes(10751) || genreIds.includes(16)) return 'PG';
+  if (genreIds.includes(28) || genreIds.includes(80)) return 'PG-13';
+  return 'PG-13';
 }
 
 function renderHeroIndicators() {
@@ -154,7 +185,7 @@ function startHeroTimer() {
   heroTimer = setInterval(() => {
     const next = (heroIndex + 1) % heroMovies.length;
     setHero(next);
-  }, 7000);
+  }, 8000);
 }
 
 function resetHeroTimer() {
@@ -166,20 +197,59 @@ function resetHeroTimer() {
 async function loadSections() {
   const container = document.getElementById('mainContent');
 
-  await UI.renderSection(container, '🔥 Trending This Week', () => API.trending(), false);
-  await UI.renderSection(container, '🎬 Popular Movies', () => API.popular(), false);
-  await UI.renderSection(container, '📺 Trending TV Shows', () => API.trendingTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
-  await UI.renderSection(container, '⭐ Top Rated', () => API.topRated(), false);
-  await UI.renderSection(container, '🆕 New Releases', () => API.recentlyStreaming(), true);
-  await UI.renderSection(container, '📺 Popular TV Shows', () => API.popularTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
-  await UI.renderSection(container, '🚀 Action & Adventure', () => API.byGenre(28), false);
-  await UI.renderSection(container, '😱 Horror', () => API.byGenre(27), false);
-  await UI.renderSection(container, '📺 Top Rated TV', () => API.topRatedTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
-  await UI.renderSection(container, '🔭 Science Fiction', () => API.byGenre(878), false);
-  await UI.renderSection(container, '😂 Comedy', () => API.byGenre(35), false);
-  await UI.renderSection(container, '💕 Romance', () => API.byGenre(10749), false);
-  await UI.renderSection(container, '🎭 Drama', () => API.byGenre(18), false);
-  await UI.renderSection(container, '🔪 Thriller', () => API.byGenre(53), false);
+  // Top 10 row
+  await renderTop10(container);
+
+  await UI.renderSection(container, 'Trending Now', () => API.trending(), false);
+  await UI.renderSection(container, 'Popular on EmilyFlix', () => API.popular(), false);
+  await UI.renderSection(container, 'TV Shows Trending Today', () => API.trendingTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
+  await UI.renderSection(container, 'Top Rated', () => API.topRated(), false);
+  await UI.renderSection(container, 'New Releases', () => API.recentlyStreaming(), true);
+  await UI.renderSection(container, 'Popular TV Shows', () => API.popularTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
+  await UI.renderSection(container, 'Action & Adventure', () => API.byGenre(28), false);
+  await UI.renderSection(container, 'Suspenseful Horror', () => API.byGenre(27), false);
+  await UI.renderSection(container, 'Top Rated TV', () => API.topRatedTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
+  await UI.renderSection(container, 'Sci-Fi & Fantasy', () => API.byGenre(878), false);
+  await UI.renderSection(container, 'Comedies', () => API.byGenre(35), false);
+  await UI.renderSection(container, 'Romantic Favourites', () => API.byGenre(10749), false);
+  await UI.renderSection(container, 'Dramas', () => API.byGenre(18), false);
+  await UI.renderSection(container, 'Edge-of-Your-Seat Thrillers', () => API.byGenre(53), false);
+}
+
+// ===== TOP 10 ROW =====
+async function renderTop10(container) {
+  const section = document.createElement('div');
+  section.className = 'section';
+  section.innerHTML = `
+    <div class="section-title">Top 10 in the US Today</div>
+    <div class="carousel-wrapper">
+      <button class="carousel-btn prev">&lsaquo;</button>
+      <div class="carousel" id="top10Carousel">
+        ${Array.from({length: 6}, () => '<div class="skeleton" style="width:180px;height:250px;border-radius:4px;flex-shrink:0;"></div>').join('')}
+      </div>
+      <button class="carousel-btn next">&rsaquo;</button>
+    </div>
+  `;
+  container.appendChild(section);
+  UI.setupCarousel(section.querySelector('.carousel-wrapper'));
+
+  const data = await API.trending();
+  const carousel = document.getElementById('top10Carousel');
+  carousel.innerHTML = '';
+
+  if (data && data.results) {
+    data.results.slice(0, 10).forEach((movie, idx) => {
+      const el = document.createElement('div');
+      el.className = 'top10-card';
+      el.innerHTML = `
+        <span class="top10-rank">${idx + 1}</span>
+        <img src="${API.img(movie.poster_path, 'w342')}" alt="${movie.title || movie.name || ''}" loading="lazy"
+             onerror="this.src='https://via.placeholder.com/342x513/1a1a1a/555?text=No+Image'">
+      `;
+      el.addEventListener('click', () => Modal.open(movie.id));
+      carousel.appendChild(el);
+    });
+  }
 }
 
 // ===== SEARCH =====
@@ -206,17 +276,17 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 
 async function doSearch(query) {
   const container = document.getElementById('searchResults');
-  container.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
+  container.innerHTML = '<div class="spinner" style="margin:20px auto;grid-column:1/-1;"></div>';
 
   const data = await API.searchMulti(query);
   container.innerHTML = '';
 
   if (!data || !data.results || data.results.length === 0) {
-    container.innerHTML = '<p style="color:#aaa;text-align:center;grid-column:1/-1;padding:20px;">No results found.</p>';
+    container.innerHTML = '<p style="color:#999;text-align:center;grid-column:1/-1;padding:20px;">No results found.</p>';
     return;
   }
 
-  data.results.slice(0, 12).forEach(item => {
+  data.results.slice(0, 18).forEach(item => {
     container.appendChild(UI.card(item));
   });
 }
