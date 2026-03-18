@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play — EmilyFlix</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+    body { background: #000; }
+
+    .play-page {
+      min-height: 100vh;
+      padding-top: var(--nav-height);
+    }
+
+    .play-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #999;
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 16px 4%;
+      transition: color 0.2s;
+    }
+    .play-back:hover { color: #fff; }
+    .play-back svg { width: 18px; height: 18px; }
+
+    .game-title-bar {
+      padding: 0 4% 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .game-title-bar h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    .game-title-bar .console-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: var(--red);
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    /* Emulator container */
+    .emulator-wrap {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 4%;
+    }
+    #game {
+      width: 100%;
+      aspect-ratio: 4/3;
+      max-height: 75vh;
+      background: #0a0a0a;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Upload section */
+    .upload-section {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 4%;
+    }
+    .upload-zone {
+      border: 2px dashed rgba(229,9,20,0.4);
+      border-radius: 12px;
+      padding: 60px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+      background: rgba(229,9,20,0.02);
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--red);
+      background: rgba(229,9,20,0.06);
+    }
+    .upload-zone-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .upload-zone h2 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    .upload-zone p {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    .upload-zone .btn {
+      pointer-events: none;
+    }
+    .upload-zone input[type="file"] {
+      display: none;
+    }
+
+    .core-select-wrap {
+      max-width: 800px;
+      margin: 20px auto 0;
+      padding: 0 4%;
+      display: none;
+    }
+    .core-select-wrap.visible { display: block; }
+    .core-select-wrap label {
+      display: block;
+      color: #aaa;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    .core-select-wrap select {
+      width: 100%;
+      max-width: 300px;
+      padding: 10px 14px;
+      background: #222;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 0.95rem;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+    .core-select-wrap select:focus {
+      border-color: var(--red);
+    }
+
+    /* Controls info */
+    .controls-info {
+      max-width: 1200px;
+      margin: 30px auto 0;
+      padding: 0 4% 40px;
+    }
+    .controls-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      color: #e5e5e5;
+    }
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .control-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .control-card h4 {
+      font-size: 0.85rem;
+      color: var(--red);
+      margin-bottom: 8px;
+    }
+    .control-card p {
+      color: #999;
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+    .control-card kbd {
+      background: rgba(255,255,255,0.1);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: #ddd;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .tips-banner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 4% 40px;
+    }
+    .tips-banner-inner {
+      background: linear-gradient(135deg, rgba(229,9,20,0.08), rgba(88,28,135,0.08));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 20px 24px;
+    }
+    .tips-banner h3 {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      color: #e5e5e5;
+    }
+    .tips-banner ul {
+      list-style: none;
+      padding: 0;
+    }
+    .tips-banner li {
+      color: #999;
+      font-size: 0.82rem;
+      line-height: 1.8;
+      padding-left: 18px;
+      position: relative;
+    }
+    .tips-banner li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+    }
+
+    @media (max-width: 600px) {
+      .game-title-bar h1 { font-size: 1.2rem; }
+      #game { aspect-ratio: 16/9; }
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar solid" id="navbar">
+  <div class="navbar-left">
+    <a href="index.html" class="logo">EmilyFlix</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="tv.html">TV Shows</a></li>
+      <li><a href="movies.html">Movies</a></li>
+      <li><a href="games.html" class="active">Games</a></li>
+      <li><a href="movies.html?genre=28">New &amp; Popular</a></li>
+    </ul>
+    <span class="tagline">Made for a mother who needs a break — only 1 ad</span>
+  </div>
+  <div class="navbar-right">
+    <button class="nav-icon-btn" title="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+      <span class="notification-dot"></span>
+    </button>
+    <div class="profile-avatar" title="Emily">E</div>
+  </div>
+</nav>
+
+<div class="play-page">
+  <!-- Back link -->
+  <a href="games.html" class="play-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to Games
+  </a>
+
+  <!-- Game Title -->
+  <div class="game-title-bar" id="titleBar" style="display:none;">
+    <h1 id="gameTitle"></h1>
+    <span class="console-tag" id="consoleTag"></span>
+  </div>
+
+  <!-- Emulator Container (shown when playing a ROM) -->
+  <div class="emulator-wrap" id="emulatorWrap" style="display:none;">
+    <div id="game"></div>
+  </div>
+
+  <!-- Upload Section (shown when no ROM specified or upload=1) -->
+  <div class="upload-section" id="uploadSection" style="display:none;">
+    <div class="upload-zone" id="uploadZone">
+      <span class="upload-zone-icon">&#127918;</span>
+      <h2>Upload Your Own ROM</h2>
+      <p>Drag and drop a ROM file here, or click to browse.<br>Supports: .nes, .smc, .sfc, .z64, .n64, .gb, .gbc, .gba, .bin, .md, .gen, .iso, .cue, .pbp, .nds, .a26, .zip</p>
+      <span class="btn btn-primary">Browse Files</span>
+      <input type="file" id="romFile" accept=".nes,.smc,.sfc,.z64,.n64,.v64,.gb,.gbc,.gba,.bin,.md,.gen,.sms,.iso,.cue,.pbp,.cso,.nds,.a26,.zip,.7z">
+    </div>
+  </div>
+
+  <!-- Core selector for uploaded ROMs -->
+  <div class="core-select-wrap" id="coreSelectWrap">
+    <label>Select Console / System:</label>
+    <select id="coreSelect">
+      <option value="">-- Auto-detect --</option>
+      <option value="nes">NES (Nintendo Entertainment System)</option>
+      <option value="snes">SNES (Super Nintendo)</option>
+      <option value="n64">N64 (Nintendo 64)</option>
+      <option value="gb">Game Boy / Game Boy Color</option>
+      <option value="gba">Game Boy Advance</option>
+      <option value="segaMD">Sega Genesis / Mega Drive</option>
+      <option value="segaMS">Sega Master System</option>
+      <option value="segaSaturn">Sega Saturn</option>
+      <option value="psx">PlayStation 1 (PS1)</option>
+      <option value="psp">PSP (PlayStation Portable)</option>
+      <option value="atari2600">Atari 2600</option>
+      <option value="arcade">Arcade / MAME / Neo Geo</option>
+      <option value="nds">Nintendo DS</option>
+    </select>
+  </div>
+
+  <!-- Controls Info -->
+  <div class="controls-info">
+    <h3>Keyboard Controls</h3>
+    <div class="controls-grid">
+      <div class="control-card">
+        <h4>D-Pad / Movement</h4>
+        <p><kbd>Arrow Keys</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></p>
+      </div>
+      <div class="control-card">
+        <h4>Action Buttons</h4>
+        <p><kbd>X</kbd> = A &nbsp; <kbd>Z</kbd> = B<br><kbd>S</kbd> = X &nbsp; <kbd>A</kbd> = Y</p>
+      </div>
+      <div class="control-card">
+        <h4>Shoulder Buttons</h4>
+        <p><kbd>Q</kbd> = L &nbsp; <kbd>E</kbd> = R</p>
+      </div>
+      <div class="control-card">
+        <h4>System</h4>
+        <p><kbd>Enter</kbd> = Start &nbsp; <kbd>Shift</kbd> = Select<br><kbd>F11</kbd> = Fullscreen</p>
+      </div>
+      <div class="control-card">
+        <h4>Save States</h4>
+        <p>EmulatorJS menu (bottom-right) has save/load state, screenshot, and more.</p>
+      </div>
+      <div class="control-card">
+        <h4>Gamepad Support</h4>
+        <p>Plug in a USB or Bluetooth controller for the best experience. EmulatorJS auto-detects most gamepads.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips-banner">
+    <div class="tips-banner-inner">
+      <h3>Tips for Best Experience</h3>
+      <ul>
+        <li>Use <strong>Chrome or Edge</strong> for best emulation performance</li>
+        <li>N64, PS1, PSP, and Saturn games may take longer to load</li>
+        <li>Save states are stored in your browser — clearing browser data will delete them</li>
+        <li>For NDS games, click/tap the screen for touch input</li>
+        <li>Press <kbd>F11</kbd> for fullscreen, or use the fullscreen button in the emulator</li>
+        <li>Gamepad support is automatic — just plug in and play</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-social">
+    <a href="#" title="Facebook">&#xf09a;</a>
+    <a href="#" title="Instagram">&#xf16d;</a>
+    <a href="#" title="Twitter">&#xf099;</a>
+    <a href="#" title="YouTube">&#xf167;</a>
+  </div>
+  <div class="footer-links">
+    <a href="#">Audio Description</a>
+    <a href="#">Help Centre</a>
+    <a href="#">Gift Cards</a>
+    <a href="#">Media Centre</a>
+    <a href="#">Investor Relations</a>
+    <a href="#">Jobs</a>
+    <a href="#">Terms of Use</a>
+    <a href="#">Privacy</a>
+    <a href="#">Legal Notices</a>
+    <a href="#">Cookie Preferences</a>
+    <a href="#">Corporate Information</a>
+    <a href="#">Contact Us</a>
+  </div>
+  <button class="footer-service-code">Service Code</button>
+  <div class="footer-bottom">
+    <p>&copy; 2025 EmilyFlix. Retro gaming powered by EmulatorJS.</p>
+  </div>
+</footer>
+
+<script>
+const CONSOLE_NAMES = {
+  nes: "NES", snes: "SNES", n64: "N64",
+  gb: "Game Boy", gbc: "GBC", gba: "GBA",
+  genesis: "Genesis", segaMD: "Genesis", segaMS: "Master System",
+  sms: "Master System", saturn: "Saturn", segaSaturn: "Saturn",
+  ps1: "PS1", psx: "PS1", psp: "PSP",
+  atari2600: "Atari 2600", neogeo: "Neo Geo",
+  arcade: "Arcade", nds: "NDS"
+};
+
+// Extension to core mapping for auto-detection
+const EXT_TO_CORE = {
+  'nes': 'nes',
+  'smc': 'snes', 'sfc': 'snes',
+  'z64': 'n64', 'n64': 'n64', 'v64': 'n64',
+  'gb': 'gb', 'gbc': 'gb',
+  'gba': 'gba',
+  'bin': 'segaMD', 'md': 'segaMD', 'gen': 'segaMD',
+  'sms': 'segaMS',
+  'iso': 'psx', 'cue': 'psx', 'pbp': 'psp', 'cso': 'psp',
+  'nds': 'nds',
+  'a26': 'atari2600',
+  'zip': null, '7z': null  // need manual selection
+};
+
+const params = new URLSearchParams(window.location.search);
+const romUrl = params.get('rom');
+const core = params.get('core');
+const title = params.get('title');
+const consoleName = params.get('console');
+const isUpload = params.get('upload');
+
+if (romUrl && core) {
+  // Direct play mode
+  document.getElementById('emulatorWrap').style.display = 'block';
+  document.getElementById('titleBar').style.display = 'flex';
+  document.getElementById('gameTitle').textContent = decodeURIComponent(title || 'Unknown Game');
+  document.getElementById('consoleTag').textContent = CONSOLE_NAMES[consoleName] || CONSOLE_NAMES[core] || core;
+  document.title = `${decodeURIComponent(title || 'Play')} — EmilyFlix`;
+
+  // Load EmulatorJS
+  window.EJS_player = '#game';
+  window.EJS_gameUrl = decodeURIComponent(romUrl);
+  window.EJS_core = core;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/v4.0.12/data/';
+  window.EJS_color = '#e50914';
+  window.EJS_startOnLoaded = true;
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.emulatorjs.org/v4.0.12/data/loader.js';
+  document.body.appendChild(script);
+} else {
+  // Upload mode
+  document.getElementById('uploadSection').style.display = 'block';
+  document.title = 'Upload & Play — EmilyFlix';
+}
+
+// Upload handling
+const uploadZone = document.getElementById('uploadZone');
+const romFileInput = document.getElementById('romFile');
+const coreSelectWrap = document.getElementById('coreSelectWrap');
+const coreSelect = document.getElementById('coreSelect');
+
+if (uploadZone) {
+  uploadZone.addEventListener('click', () => romFileInput.click());
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  romFileInput.addEventListener('change', () => {
+    if (romFileInput.files.length > 0) {
+      handleFile(romFileInput.files[0]);
+    }
+  });
+}
+
+function handleFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  let detectedCore = EXT_TO_CORE[ext] || null;
+
+  if (!detectedCore) {
+    // Show core selector
+    coreSelectWrap.classList.add('visible');
+    coreSelectWrap.scrollIntoView({ behavior: 'smooth' });
+
+    // Wait for user to select core
+    coreSelect.onchange = () => {
+      if (coreSelect.value) {
+        launchLocalROM(file, coreSelect.value);
+      }
+    };
+  } else {
+    launchLocalROM(file, detectedCore);
+  }
+}
+
+function launchLocalROM(file, core) {
+  const blobUrl = URL.createObjectURL(file);
+  const gameName = file.name.replace(/\.[^.]+$/, '');
+
+  // Hide upload, show emulator
+  document.getElementById('uploadSection').style.display = 'none';
+  coreSelectWrap.classList.remove('visible');
+  document.getElementById('emulatorWrap').style.display = 'block';
+  document.getElementById('titleBar').style.display = 'flex';
+  document.getElementById('gameTitle').textContent = gameName;
+  document.getElementById('consoleTag').textContent = CONSOLE_NAMES[core] || core;
+  document.title = `${gameName} — EmilyFlix`;
+
+  // Load EmulatorJS
+  window.EJS_player = '#game';
+  window.EJS_gameUrl = blobUrl;
+  window.EJS_core = core;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/v4.0.12/data/';
+  window.EJS_color = '#e50914';
+  window.EJS_startOnLoaded = true;
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.emulatorjs.org/v4.0.12/data/loader.js';
+  document.body.appendChild(script);
+}
+</script>
+</body>
+</html>
