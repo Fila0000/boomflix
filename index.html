@@ -217,6 +217,11 @@ async function loadSections() {
   await UI.renderSection(container, 'Dramas', () => API.byGenre(18), false);
   await UI.renderSection(container, 'Edge-of-Your-Seat Thrillers', () => API.byGenre(53), false);
 
+  // Psychological Thriller section
+  await UI.renderSection(container, 'Psychological Thrillers', () => API.psychThrillers(), false);
+  await UI.renderSection(container, 'Mind-Bending Movies', () => API.mindBending(), false);
+  await UI.renderSection(container, 'True Crime', () => API.trueCrime(), false);
+
   // Slapstick & Stupid Funny — curated list of classic comedy films
   await UI.renderSection(container, 'Stupid Funny & Slapstick', () => API.discover({
     with_genres: '35',

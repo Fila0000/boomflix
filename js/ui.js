@@ -27,27 +27,41 @@ const UI = {
     const genres = isTV ? API.tvGenreNames(item.genre_ids || []) : API.genreNames(item.genre_ids || []);
     const maturity = getMaturityFromGenres(item.genre_ids);
 
+    // RT-style score color
+    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+    const scoreClass = matchPct >= 75 ? 'fresh' : matchPct >= 50 ? 'mixed' : 'rotten';
+
+    // Content rating from TMDB data (if available from details fetch) or genre fallback
+    const certification = API.getCertification(item) || maturity;
+
     el.innerHTML = `
       <img src="${imgSrc}" alt="${title}" loading="lazy"
            onerror="this.src='https://via.placeholder.com/${wide ? '780x440' : '342x513'}/1a1a1a/555?text=No+Image'">
       ${isTV ? '<div class="tv-badge">TV</div>' : ''}
+      <div class="card-score-badge ${scoreClass}" style="--score-color:${scoreColor}">
+        <svg class="card-score-icon" width="10" height="10" viewBox="0 0 24 24" fill="${scoreColor}">
+          ${matchPct >= 75 ? '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' : matchPct >= 50 ? '<rect x="3" y="10" width="18" height="4" rx="1"/>' : '<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>'}
+        </svg>
+        <span>${matchPct}%</span>
+      </div>
+      <div class="card-cert-badge">${certification}</div>
       <div class="movie-card-overlay">
         <div class="movie-card-actions">
           <button class="card-btn play-btn" title="Play">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#111"><polygon points="5,3 19,12 5,21"/></svg>
           </button>
-          <button class="card-btn add-btn" title="Add to My List">+</button>
-          <button class="card-btn like-btn" title="Like">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          <button class="card-btn trailer-btn" title="Watch Trailer" data-id="${item.id}" data-type="${type}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="white" stroke="none"/></svg>
           </button>
+          <button class="card-btn add-btn" title="Add to My List">+</button>
           <span class="card-btn-spacer"></span>
           <button class="card-btn info-btn" title="More Info">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
         </div>
         <div class="movie-card-meta">
-          <span class="movie-card-rating">${matchPct}% Match</span>
-          <span class="movie-card-maturity">${maturity}</span>
+          <span class="movie-card-score" style="color:${scoreColor};font-weight:700;">${matchPct}%</span>
+          <span class="movie-card-maturity">${certification}</span>
           <span>${year}</span>
         </div>
         <div class="movie-card-meta" style="margin-top:3px;">
@@ -72,16 +86,24 @@ const UI = {
       Modal.open(item.id, type);
     });
 
+    // Trailer button
+    el.querySelector('.trailer-btn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tId = e.currentTarget.dataset.id;
+      const tType = e.currentTarget.dataset.type;
+      const details = tType === 'tv' ? await API.tvDetails(tId) : await API.details(tId);
+      const trailer = API.getTrailer(details);
+      if (trailer) {
+        TrailerModal.open(trailer.key, details.title || details.name || 'Trailer');
+      } else {
+        UI.toast('No trailer available');
+      }
+    });
+
     // Add to list button
     el.querySelector('.add-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       UI.toast('Added to My List');
-    });
-
-    // Like button
-    el.querySelector('.like-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      UI.toast('Liked!');
     });
 
     // Card click -> open modal
@@ -239,7 +261,17 @@ const Modal = {
       ? `watch.html?id=${item.id}&type=tv&season=1&episode=1`
       : `watch.html?id=${item.id}`;
     const seasons = isTV && item.seasons ? item.seasons.filter(s => s.season_number > 0) : [];
-    const maturity = getMaturityFromGenres((item.genres || []).map(g => g.id));
+
+    // Get real certification from TMDB data
+    const certification = API.getCertification(item);
+    const maturityDisplay = certification || getMaturityFromGenres((item.genres || []).map(g => g.id));
+
+    // RT-style score
+    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+    const scoreLabel = matchPct >= 75 ? 'Fresh' : matchPct >= 50 ? 'Mixed' : 'Rotten';
+
+    // Trailer
+    const trailer = API.getTrailer(item);
 
     this.el.innerHTML = `
       <div class="modal">
@@ -251,16 +283,23 @@ const Modal = {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#111"><polygon points="5,3 19,12 5,21"/></svg>
               Play
             </a>
+            ${trailer ? `<button class="btn btn-info btn-trailer-modal" data-key="${trailer.key}" data-title="${title}" style="font-size:0.9rem;padding:8px 20px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>
+              Trailer
+            </button>` : ''}
           </div>
         </div>
         <div class="modal-body">
           <h2 class="modal-title">${title}</h2>
           <div class="modal-meta">
-            <span class="modal-rating">${matchPct}% Match</span>
+            <span class="modal-score-badge" style="color:${scoreColor};font-weight:700;">
+              <span class="modal-score-circle" style="border-color:${scoreColor};color:${scoreColor};">${matchPct}%</span>
+              ${scoreLabel}
+            </span>
             <span class="modal-year">${year}</span>
             ${runtime ? `<span class="modal-runtime">${runtime}</span>` : ''}
             <span class="modal-hd">HD</span>
-            <span class="maturity-badge">${maturity}</span>
+            <span class="maturity-badge">${maturityDisplay}</span>
             ${isTV && seasons.length ? `<span style="color:#aaa;">${seasons.length} Season${seasons.length > 1 ? 's' : ''}</span>` : ''}
           </div>
           <p class="modal-description">${item.overview || 'No description available.'}</p>
@@ -273,10 +312,23 @@ const Modal = {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
               Watch Now
             </a>
+            ${trailer ? `<button class="btn btn-info btn-trailer-modal" data-key="${trailer.key}" data-title="${title}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>
+              Watch Trailer
+            </button>` : ''}
           </div>
         </div>
       </div>
     `;
+
+    // Attach trailer button handlers in modal
+    this.el.querySelectorAll('.btn-trailer-modal').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        TrailerModal.open(btn.dataset.key, btn.dataset.title);
+      });
+    });
   },
 
   close() {
@@ -285,3 +337,56 @@ const Modal = {
     document.body.style.overflow = '';
   }
 };
+
+// ===== TRAILER MODAL =====
+const TrailerModal = {
+  el: null,
+
+  init() {
+    // Create trailer overlay if it doesn't exist
+    if (document.getElementById('trailerModal')) {
+      this.el = document.getElementById('trailerModal');
+      return;
+    }
+    this.el = document.createElement('div');
+    this.el.id = 'trailerModal';
+    this.el.className = 'trailer-modal-overlay';
+    this.el.innerHTML = `
+      <div class="trailer-modal">
+        <div class="trailer-modal-header">
+          <span class="trailer-modal-title"></span>
+          <button class="trailer-modal-close">&times;</button>
+        </div>
+        <div class="trailer-modal-body">
+          <iframe class="trailer-iframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(this.el);
+
+    this.el.querySelector('.trailer-modal-close').addEventListener('click', () => this.close());
+    this.el.addEventListener('click', (e) => {
+      if (e.target === this.el) this.close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.el.classList.contains('active')) this.close();
+    });
+  },
+
+  open(youtubeKey, title) {
+    if (!this.el) this.init();
+    this.el.querySelector('.trailer-modal-title').textContent = title || 'Trailer';
+    this.el.querySelector('.trailer-iframe').src = `https://www.youtube.com/embed/${youtubeKey}?autoplay=1&rel=0`;
+    this.el.classList.add('active');
+  },
+
+  close() {
+    if (!this.el) return;
+    this.el.classList.remove('active');
+    this.el.querySelector('.trailer-iframe').src = '';
+  }
+};
+
+// Auto-init TrailerModal
+document.addEventListener('DOMContentLoaded', () => TrailerModal.init());
+if (document.readyState !== 'loading') TrailerModal.init();

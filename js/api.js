@@ -110,7 +110,7 @@ const API = {
   },
 
   async details(id) {
-    return this.fetch(`/movie/${id}`, { append_to_response: 'credits,similar,videos' });
+    return this.fetch(`/movie/${id}`, { append_to_response: 'credits,similar,videos,release_dates' });
   },
 
   async search(query, page = 1) {
@@ -154,7 +154,7 @@ const API = {
   },
 
   async tvDetails(id) {
-    return this.fetch(`/tv/${id}`, { append_to_response: 'credits,similar,videos' });
+    return this.fetch(`/tv/${id}`, { append_to_response: 'credits,similar,videos,content_ratings' });
   },
 
   async tvSeasonDetails(tvId, seasonNumber) {
@@ -287,5 +287,70 @@ const API = {
 
   genreNames(ids = []) {
     return ids.slice(0, 3).map(id => GENRES[id] || '').filter(Boolean);
+  },
+
+  // Extract US content rating (PG, PG-13, R, etc.) from movie release_dates data
+  getCertification(movie) {
+    if (!movie) return '';
+    // Direct certification field (from discover with certification params)
+    if (movie.certification) return movie.certification;
+    // From release_dates append_to_response
+    if (movie.release_dates && movie.release_dates.results) {
+      const us = movie.release_dates.results.find(r => r.iso_3166_1 === 'US');
+      if (us && us.release_dates && us.release_dates.length > 0) {
+        // Find theatrical or general release with a certification
+        for (const rd of us.release_dates) {
+          if (rd.certification) return rd.certification;
+        }
+      }
+    }
+    // From TV content_ratings
+    if (movie.content_ratings && movie.content_ratings.results) {
+      const us = movie.content_ratings.results.find(r => r.iso_3166_1 === 'US');
+      if (us) return us.rating;
+    }
+    return '';
+  },
+
+  // Get the best YouTube trailer from videos data
+  getTrailer(item) {
+    if (!item || !item.videos || !item.videos.results) return null;
+    const vids = item.videos.results;
+    // Prefer official trailers on YouTube
+    let trailer = vids.find(v => v.type === 'Trailer' && v.site === 'YouTube' && v.official);
+    if (!trailer) trailer = vids.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+    if (!trailer) trailer = vids.find(v => v.type === 'Teaser' && v.site === 'YouTube');
+    if (!trailer) trailer = vids.find(v => v.site === 'YouTube');
+    return trailer;
+  },
+
+  // Psychological thriller / mind-bending / true crime discovery
+  async psychThrillers(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_genres: '53',
+      with_keywords: '11949|6075',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async mindBending(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_keywords: '10349|157307',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 100
+    });
+  },
+
+  async trueCrime(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_genres: '80',
+      with_keywords: '198402|18244',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 20
+    });
   }
 };
