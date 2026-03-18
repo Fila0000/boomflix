@@ -105,12 +105,16 @@
 <div class="section" style="padding-bottom:0;">
   <div class="genres-row" id="genresRow">
     <a href="movies.html" class="genre-pill" data-genre="">All</a>
+    <a href="movies.html?custom=zombies" class="genre-pill" data-custom="zombies">Zombies</a>
+    <a href="movies.html?custom=clean-comedy" class="genre-pill" data-custom="clean-comedy">Clean Comedy</a>
+    <a href="movies.html?genre=18" class="genre-pill" data-genre="18">Drama</a>
+    <a href="movies.html?custom=dystopian" class="genre-pill" data-custom="dystopian">Dystopian</a>
+    <a href="movies.html?custom=psych-thriller" class="genre-pill" data-custom="psych-thriller">Psychological Thriller</a>
     <a href="movies.html?genre=28" class="genre-pill" data-genre="28">Action</a>
     <a href="movies.html?genre=12" class="genre-pill" data-genre="12">Adventure</a>
     <a href="movies.html?genre=16" class="genre-pill" data-genre="16">Animation</a>
     <a href="movies.html?genre=35" class="genre-pill" data-genre="35">Comedy</a>
     <a href="movies.html?genre=80" class="genre-pill" data-genre="80">Crime</a>
-    <a href="movies.html?genre=18" class="genre-pill" data-genre="18">Drama</a>
     <a href="movies.html?genre=14" class="genre-pill" data-genre="14">Fantasy</a>
     <a href="movies.html?genre=27" class="genre-pill" data-genre="27">Horror</a>
     <a href="movies.html?genre=9648" class="genre-pill" data-genre="9648">Mystery</a>
@@ -170,19 +174,35 @@
 <script>
 const params = new URLSearchParams(window.location.search);
 const genreId = params.get('genre') || '';
+const customGenre = params.get('custom') || '';
 let currentPage = 1;
 let totalPages = 1;
 let currentSort = 'popularity.desc';
 
-// Highlight active genre
+// Custom genre config
+const CUSTOM_GENRES = {
+  'zombies': { name: 'Zombies', keywords: '12377' },
+  'clean-comedy': { name: 'Clean Comedy', genre: '35', withoutGenres: '27,53,80', certLte: 'PG-13' },
+  'dystopian': { name: 'Dystopian', keywords: '4565|161176' },
+  'psych-thriller': { name: 'Psychological Thriller', genre: '53', keywords: '11949|6075' }
+};
+
+// Highlight active genre pill
 document.querySelectorAll('.genre-pill').forEach(pill => {
-  if (pill.dataset.genre === genreId) {
+  if (customGenre && pill.dataset.custom === customGenre) {
+    pill.classList.add('active');
+  } else if (!customGenre && pill.dataset.genre === genreId) {
     pill.classList.add('active');
   }
 });
 
 // Update page title
-if (genreId && GENRES[parseInt(genreId)]) {
+if (customGenre && CUSTOM_GENRES[customGenre]) {
+  const name = CUSTOM_GENRES[customGenre].name;
+  document.getElementById('pageTitle').textContent = name + ' Movies';
+  document.getElementById('pageSubtitle').textContent = `Browse ${name} movies`;
+  document.title = `${name} Movies — EmilyFlix`;
+} else if (genreId && GENRES[parseInt(genreId)]) {
   const name = GENRES[parseInt(genreId)];
   document.getElementById('pageTitle').textContent = name + ' Movies';
   document.getElementById('pageSubtitle').textContent = `Browse ${name} movies`;
@@ -207,7 +227,18 @@ async function fetchMovies(page = 1, append = false) {
   };
 
   let data;
-  if (genreId) {
+  if (customGenre && CUSTOM_GENRES[customGenre]) {
+    const cfg = CUSTOM_GENRES[customGenre];
+    const discoverParams = { ...baseParams };
+    if (cfg.genre) discoverParams.with_genres = cfg.genre;
+    if (cfg.keywords) discoverParams.with_keywords = cfg.keywords;
+    if (cfg.withoutGenres) discoverParams.without_genres = cfg.withoutGenres;
+    if (cfg.certLte) {
+      discoverParams.certification_country = 'US';
+      discoverParams['certification.lte'] = cfg.certLte;
+    }
+    data = await API.fetch('/discover/movie', discoverParams);
+  } else if (genreId) {
     data = await API.fetch('/discover/movie', {
       ...baseParams,
       with_genres: genreId

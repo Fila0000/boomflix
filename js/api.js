@@ -165,6 +165,96 @@ const API = {
     return this.fetch('/search/tv', { query, page });
   },
 
+  // ===== EMILY'S CUSTOM GENRES =====
+  async zombieMovies(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_keywords: '12377', // zombie
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async zombieTV(page = 1) {
+    return this.fetch('/discover/tv', {
+      with_keywords: '12377',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 20
+    });
+  },
+
+  async cleanComedy(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_genres: '35',
+      without_genres: '27,53,80', // exclude horror, thriller, crime
+      certification_country: 'US',
+      'certification.lte': 'PG-13',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 100
+    });
+  },
+
+  async cleanComedyTV(page = 1) {
+    return this.fetch('/discover/tv', {
+      with_genres: '35',
+      without_genres: '80', // exclude crime
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async dystopianMovies(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_keywords: '4565|161176', // dystopia | dystopian
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async dystopianTV(page = 1) {
+    return this.fetch('/discover/tv', {
+      with_keywords: '4565|161176',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 20
+    });
+  },
+
+  async psychThrillerMovies(page = 1) {
+    return this.fetch('/discover/movie', {
+      with_genres: '53',
+      with_keywords: '11949|6075', // psychological thriller | psychological
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async psychThrillerTV(page = 1) {
+    return this.fetch('/discover/tv', {
+      with_genres: '9648', // mystery (closest TV genre)
+      with_keywords: '11949|6075',
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 20
+    });
+  },
+
+  // Long-running TV series (high episode count, well-known)
+  async longSeriesTV(page = 1) {
+    return this.fetch('/discover/tv', {
+      page,
+      sort_by: 'vote_count.desc',
+      'vote_count.gte': 500,
+      'first_air_date.lte': '2023-01-01',
+      with_type: '0' // scripted
+    });
+  },
+
   async searchMulti(query, page = 1) {
     const data = await this.fetch('/search/multi', { query, page });
     if (data && data.results) {

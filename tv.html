@@ -105,12 +105,17 @@
 <div class="section" style="padding-bottom:0;">
   <div class="genres-row" id="genresRow">
     <a href="tv.html" class="genre-pill" data-genre="">All</a>
+    <a href="tv.html?custom=zombies" class="genre-pill" data-custom="zombies">Zombies</a>
+    <a href="tv.html?custom=clean-comedy" class="genre-pill" data-custom="clean-comedy">Clean Comedy</a>
+    <a href="tv.html?genre=18" class="genre-pill" data-genre="18">Drama</a>
+    <a href="tv.html?custom=dystopian" class="genre-pill" data-custom="dystopian">Dystopian</a>
+    <a href="tv.html?custom=psych-thriller" class="genre-pill" data-custom="psych-thriller">Psychological Thriller</a>
+    <a href="tv.html?custom=long-series" class="genre-pill" data-custom="long-series">Long Series</a>
     <a href="tv.html?genre=10759" class="genre-pill" data-genre="10759">Action & Adventure</a>
     <a href="tv.html?genre=16" class="genre-pill" data-genre="16">Animation</a>
     <a href="tv.html?genre=35" class="genre-pill" data-genre="35">Comedy</a>
     <a href="tv.html?genre=80" class="genre-pill" data-genre="80">Crime</a>
     <a href="tv.html?genre=99" class="genre-pill" data-genre="99">Documentary</a>
-    <a href="tv.html?genre=18" class="genre-pill" data-genre="18">Drama</a>
     <a href="tv.html?genre=10751" class="genre-pill" data-genre="10751">Family</a>
     <a href="tv.html?genre=10762" class="genre-pill" data-genre="10762">Kids</a>
     <a href="tv.html?genre=9648" class="genre-pill" data-genre="9648">Mystery</a>
@@ -168,19 +173,36 @@
 <script>
 const params = new URLSearchParams(window.location.search);
 const genreId = params.get('genre') || '';
+const customGenre = params.get('custom') || '';
 let currentPage = 1;
 let totalPages = 1;
 let currentSort = 'popularity.desc';
 
-// Highlight active genre
+// Custom genre config for TV
+const TV_CUSTOM_GENRES = {
+  'zombies': { name: 'Zombies', keywords: '12377' },
+  'clean-comedy': { name: 'Clean Comedy', genre: '35', withoutGenres: '80' },
+  'dystopian': { name: 'Dystopian', keywords: '4565|161176' },
+  'psych-thriller': { name: 'Psychological Thriller', genre: '9648', keywords: '11949|6075' },
+  'long-series': { name: 'Long Series', sortBy: 'vote_count.desc', voteMin: 500, airBefore: '2023-01-01' }
+};
+
+// Highlight active genre pill
 document.querySelectorAll('.genre-pill').forEach(pill => {
-  if (pill.dataset.genre === genreId) {
+  if (customGenre && pill.dataset.custom === customGenre) {
+    pill.classList.add('active');
+  } else if (!customGenre && pill.dataset.genre === genreId) {
     pill.classList.add('active');
   }
 });
 
-// Update page title for genre
-if (genreId && TV_GENRES[parseInt(genreId)]) {
+// Update page title
+if (customGenre && TV_CUSTOM_GENRES[customGenre]) {
+  const name = TV_CUSTOM_GENRES[customGenre].name;
+  document.getElementById('pageTitle').textContent = name;
+  document.getElementById('pageSubtitle').textContent = `Browse ${name} TV shows`;
+  document.title = `${name} — EmilyFlix`;
+} else if (genreId && TV_GENRES[parseInt(genreId)]) {
   const name = TV_GENRES[parseInt(genreId)];
   document.getElementById('pageTitle').textContent = name + ' TV Shows';
   document.getElementById('pageSubtitle').textContent = `Browse ${name} TV shows`;
@@ -206,11 +228,23 @@ async function fetchShows(page = 1, append = false) {
     baseParams['vote_count.gte'] = 200;
   }
 
-  if (genreId) {
-    baseParams.with_genres = genreId;
+  let data;
+  if (customGenre && TV_CUSTOM_GENRES[customGenre]) {
+    const cfg = TV_CUSTOM_GENRES[customGenre];
+    const discoverParams = { ...baseParams };
+    if (cfg.genre) discoverParams.with_genres = cfg.genre;
+    if (cfg.keywords) discoverParams.with_keywords = cfg.keywords;
+    if (cfg.withoutGenres) discoverParams.without_genres = cfg.withoutGenres;
+    if (cfg.sortBy) discoverParams.sort_by = cfg.sortBy;
+    if (cfg.voteMin) discoverParams['vote_count.gte'] = cfg.voteMin;
+    if (cfg.airBefore) discoverParams['first_air_date.lte'] = cfg.airBefore;
+    data = await API.fetch('/discover/tv', discoverParams);
+  } else {
+    if (genreId) {
+      baseParams.with_genres = genreId;
+    }
+    data = await API.fetch('/discover/tv', baseParams);
   }
-
-  const data = await API.fetch('/discover/tv', baseParams);
 
   if (!append) grid.innerHTML = '';
 
