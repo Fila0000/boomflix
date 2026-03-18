@@ -31,11 +31,14 @@ const Player = {
 
   // TV show embed iframes
   TV_FALLBACK_EMBEDS: [
-    (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}`,
-    (id, s, e) => `https://www.2embed.cc/embed/${id}?s=${s}&e=${e}`,
+    (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}`,
     (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
     (id, s, e) => `https://autoembed.co/tv/tmdb/${id}-${s}-${e}`,
+    (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://moviesapi.club/tv/${id}-${s}-${e}`,
+    (id, s, e) => `https://vidsrc.me/embed/tv/${id}/${s}/${e}`,
   ],
 
   getEmbeds() {

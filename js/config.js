@@ -20,11 +20,14 @@ const CONFIG = {
 
   // TV show embed providers
   TV_EMBED_SERVERS: [
-    { name: 'Server 1', url: (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}` },
-    { name: 'Server 2', url: (id, s, e) => `https://www.2embed.cc/embed/${id}?s=${s}&e=${e}` },
+    { name: 'Server 1', url: (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}` },
+    { name: 'Server 2', url: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
     { name: 'Server 3', url: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` },
     { name: 'Server 4', url: (id, s, e) => `https://autoembed.co/tv/tmdb/${id}-${s}-${e}` },
-    { name: 'Server 5', url: (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}` },
+    { name: 'Server 5', url: (id, s, e) => `https://vidlink.pro/tv/${id}/${s}/${e}` },
+    { name: 'Server 6', url: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` },
+    { name: 'Server 7', url: (id, s, e) => `https://moviesapi.club/tv/${id}-${s}-${e}` },
+    { name: 'Server 8', url: (id, s, e) => `https://vidsrc.me/embed/tv/${id}/${s}/${e}` },
   ],
 
   SITE_NAME: 'EmilyFlix',

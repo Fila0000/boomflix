@@ -159,11 +159,14 @@ var MOVIE_SERVERS = [
 ];
 
 var TV_SERVERS = [
-  function(id, s, e) { return 'https://vidsrc.to/embed/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://player.videasy.net/tv/' + id + '/' + s + '/' + e; },
-  function(id, s, e) { return 'https://www.2embed.cc/embed/' + id + '?s=' + s + '&e=' + e; },
+  function(id, s, e) { return 'https://embed.su/embed/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + s + '&e=' + e; },
   function(id, s, e) { return 'https://autoembed.co/tv/tmdb/' + id + '-' + s + '-' + e; },
+  function(id, s, e) { return 'https://vidlink.pro/tv/' + id + '/' + s + '/' + e; },
+  function(id, s, e) { return 'https://vidsrc.cc/v2/embed/tv/' + id + '/' + s + '/' + e; },
+  function(id, s, e) { return 'https://moviesapi.club/tv/' + id + '-' + s + '-' + e; },
+  function(id, s, e) { return 'https://vidsrc.me/embed/tv/' + id + '/' + s + '/' + e; },
 ];
 
 var SERVERS = mediaType === 'tv' ? TV_SERVERS : MOVIE_SERVERS;
