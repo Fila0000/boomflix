@@ -17,9 +17,9 @@
     <ul class="nav-links">
       <li><a href="index.html" class="active">Home</a></li>
       <li><a href="movies.html">Movies</a></li>
+      <li><a href="tv.html">TV Shows</a></li>
       <li><a href="movies.html?genre=28">Action</a></li>
       <li><a href="movies.html?genre=27">Horror</a></li>
-      <li><a href="movies.html?genre=878">Sci-Fi</a></li>
     </ul>
     <span style="color:#aaa;font-size:12px;margin-left:12px;font-style:italic;">Made for a mother who needs a break — only 1 ad 😂</span>
   </div>
@@ -33,7 +33,7 @@
   <button class="search-close" id="searchClose">✕</button>
   <div class="search-box">
     <span class="search-icon-inside">🔍</span>
-    <input type="text" id="searchInput" placeholder="Search movies..." autocomplete="off" autofocus>
+    <input type="text" id="searchInput" placeholder="Search movies & TV shows..." autocomplete="off" autofocus>
   </div>
   <div class="search-results-grid" id="searchResults"></div>
 </div>
@@ -168,10 +168,13 @@ async function loadSections() {
 
   await UI.renderSection(container, '🔥 Trending This Week', () => API.trending(), false);
   await UI.renderSection(container, '🎬 Popular Movies', () => API.popular(), false);
+  await UI.renderSection(container, '📺 Trending TV Shows', () => API.trendingTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
   await UI.renderSection(container, '⭐ Top Rated', () => API.topRated(), false);
   await UI.renderSection(container, '🆕 New Releases', () => API.recentlyStreaming(), true);
+  await UI.renderSection(container, '📺 Popular TV Shows', () => API.popularTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
   await UI.renderSection(container, '🚀 Action & Adventure', () => API.byGenre(28), false);
   await UI.renderSection(container, '😱 Horror', () => API.byGenre(27), false);
+  await UI.renderSection(container, '📺 Top Rated TV', () => API.topRatedTV().then(d => { if(d&&d.results) d.results.forEach(r=>r.media_type='tv'); return d; }), false);
   await UI.renderSection(container, '🔭 Science Fiction', () => API.byGenre(878), false);
   await UI.renderSection(container, '😂 Comedy', () => API.byGenre(35), false);
   await UI.renderSection(container, '💕 Romance', () => API.byGenre(10749), false);
@@ -205,7 +208,7 @@ async function doSearch(query) {
   const container = document.getElementById('searchResults');
   container.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
 
-  const data = await API.search(query);
+  const data = await API.searchMulti(query);
   container.innerHTML = '';
 
   if (!data || !data.results || data.results.length === 0) {
@@ -213,8 +216,8 @@ async function doSearch(query) {
     return;
   }
 
-  data.results.slice(0, 12).forEach(movie => {
-    container.appendChild(UI.card(movie));
+  data.results.slice(0, 12).forEach(item => {
+    container.appendChild(UI.card(item));
   });
 }
 

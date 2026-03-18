@@ -122,6 +122,62 @@ const API = {
     return data;
   },
 
+  // ===== TV SHOW ENDPOINTS =====
+  async trendingTV(page = 1) {
+    return this.fetch('/trending/tv/week', { page });
+  },
+
+  async popularTV(page = 1) {
+    return this.fetch('/tv/popular', { page });
+  },
+
+  async topRatedTV(page = 1) {
+    return this.fetch('/tv/top_rated', { page });
+  },
+
+  async tvByGenre(genreId, page = 1) {
+    return this.fetch('/discover/tv', {
+      with_genres: genreId,
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 50
+    });
+  },
+
+  async discoverTV(params = {}, page = 1) {
+    return this.fetch('/discover/tv', {
+      page,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 20,
+      ...params
+    });
+  },
+
+  async tvDetails(id) {
+    return this.fetch(`/tv/${id}`, { append_to_response: 'credits,similar,videos' });
+  },
+
+  async tvSeasonDetails(tvId, seasonNumber) {
+    return this.fetch(`/tv/${tvId}/season/${seasonNumber}`);
+  },
+
+  async searchTV(query, page = 1) {
+    return this.fetch('/search/tv', { query, page });
+  },
+
+  async searchMulti(query, page = 1) {
+    const data = await this.fetch('/search/multi', { query, page });
+    if (data && data.results) {
+      // Filter to only movies and tv shows
+      data.results = data.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv');
+    }
+    return data;
+  },
+
+  tvGenreNames(ids = []) {
+    return ids.slice(0, 3).map(id => TV_GENRES[id] || GENRES[id] || '').filter(Boolean);
+  },
+
   formatRuntime(mins) {
     if (!mins) return '';
     const h = Math.floor(mins / 60);

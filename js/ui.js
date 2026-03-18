@@ -1,25 +1,32 @@
 // ===== EMILYFLIX UI HELPERS =====
 const UI = {
-  // Create a movie card element
-  card(movie, wide = false) {
+  // Create a movie/TV card element
+  card(item, wide = false) {
+    // Detect if this is a TV show
+    const isTV = item.media_type === 'tv' || item.name !== undefined && !item.title;
+    const title = item.title || item.name || 'Unknown';
+    const date = item.release_date || item.first_air_date || '';
+    const type = isTV ? 'tv' : 'movie';
+
     const el = document.createElement('div');
     el.className = `movie-card${wide ? ' wide' : ''}`;
     const imgSrc = wide
-      ? API.img(movie.backdrop_path, 'w780')
-      : API.img(movie.poster_path, 'w342');
-    const rating = API.formatRating(movie.vote_average);
-    const year = API.getYear(movie.release_date);
-    const genres = API.genreNames(movie.genre_ids || []);
+      ? API.img(item.backdrop_path, 'w780')
+      : API.img(item.poster_path, 'w342');
+    const rating = API.formatRating(item.vote_average);
+    const year = API.getYear(date);
+    const genres = isTV ? API.tvGenreNames(item.genre_ids || []) : API.genreNames(item.genre_ids || []);
 
     el.innerHTML = `
-      <img src="${imgSrc}" alt="${movie.title || ''}" loading="lazy" 
+      <img src="${imgSrc}" alt="${title}" loading="lazy"
            onerror="this.src='https://via.placeholder.com/${wide ? '780x440' : '342x513'}/1a1a1a/555?text=No+Image'">
+      ${isTV ? '<div class="tv-badge">TV</div>' : ''}
       <div class="movie-card-overlay">
         <div class="movie-card-actions">
           <button class="card-btn play-btn" title="Play">▶</button>
           <button class="card-btn info-btn" title="More Info">ⓘ</button>
         </div>
-        <div class="movie-card-title">${movie.title || 'Unknown'}</div>
+        <div class="movie-card-title">${title}</div>
         <div class="movie-card-meta">
           <span class="movie-card-rating">★ ${rating}</span>
           <span>${year}</span>
@@ -28,20 +35,24 @@ const UI = {
       </div>
     `;
 
+    const watchUrl = isTV
+      ? `watch.html?id=${item.id}&type=tv&season=1&episode=1`
+      : `watch.html?id=${item.id}`;
+
     // Play button → go to player
     el.querySelector('.play-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      window.location.href = `watch.html?id=${movie.id}`;
+      window.location.href = watchUrl;
     });
 
     // Info button → open modal
     el.querySelector('.info-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      Modal.open(movie.id);
+      Modal.open(item.id, type);
     });
 
     // Card click → open modal
-    el.addEventListener('click', () => Modal.open(movie.id));
+    el.addEventListener('click', () => Modal.open(item.id, type));
 
     return el;
   },
@@ -153,7 +164,7 @@ const Modal = {
     });
   },
 
-  async open(movieId) {
+  async open(id, type = 'movie') {
     if (!this.el) return;
     this.el.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -170,52 +181,61 @@ const Modal = {
       </div>
     `;
 
-    const movie = await API.details(movieId);
-    if (!movie) {
+    const isTV = type === 'tv';
+    const item = isTV ? await API.tvDetails(id) : await API.details(id);
+    if (!item) {
       this.el.innerHTML = `<div class="modal" style="padding:40px;text-align:center;">
         <button class="modal-close" onclick="Modal.close()">✕</button>
-        <p>Failed to load movie details.</p>
+        <p>Failed to load details.</p>
       </div>`;
       return;
     }
 
-    const genres = (movie.genres || []).map(g => g.name);
-    const runtime = API.formatRuntime(movie.runtime);
-    const year = API.getYear(movie.release_date);
-    const rating = API.formatRating(movie.vote_average);
-    const backdropUrl = API.backdrop(movie.backdrop_path, 'w1280');
+    const title = item.title || item.name || 'Unknown';
+    const genres = (item.genres || []).map(g => g.name);
+    const runtime = isTV
+      ? (item.episode_run_time && item.episode_run_time[0] ? API.formatRuntime(item.episode_run_time[0]) : '')
+      : API.formatRuntime(item.runtime);
+    const year = API.getYear(item.release_date || item.first_air_date);
+    const rating = API.formatRating(item.vote_average);
+    const backdropUrl = API.backdrop(item.backdrop_path, 'w1280');
+    const watchUrl = isTV
+      ? `watch.html?id=${item.id}&type=tv&season=1&episode=1`
+      : `watch.html?id=${item.id}`;
+    const seasons = isTV && item.seasons ? item.seasons.filter(s => s.season_number > 0) : [];
 
     this.el.innerHTML = `
       <div class="modal">
         <button class="modal-close" onclick="Modal.close()">✕</button>
         <div class="modal-hero">
-          ${backdropUrl ? `<img src="${backdropUrl}" alt="${movie.title}" loading="lazy">` : ''}
+          ${backdropUrl ? `<img src="${backdropUrl}" alt="${title}" loading="lazy">` : ''}
           <div class="modal-hero-content">
-            <a href="watch.html?id=${movie.id}" class="btn btn-play" style="font-size:0.9rem;padding:10px 22px;">
+            <a href="${watchUrl}" class="btn btn-play" style="font-size:0.9rem;padding:10px 22px;">
               ▶ Play
             </a>
-            <button class="btn btn-info" style="font-size:0.9rem;padding:10px 22px;" 
-              onclick="window.location.href='watch.html?id=${movie.id}'">
+            <button class="btn btn-info" style="font-size:0.9rem;padding:10px 22px;"
+              onclick="window.location.href='${watchUrl}'">
               More Info
             </button>
           </div>
         </div>
         <div class="modal-body">
-          <h2 class="modal-title">${movie.title}</h2>
+          <h2 class="modal-title">${title}</h2>
           <div class="modal-meta">
             <span class="modal-rating">★ ${rating}</span>
             <span class="modal-year">${year}</span>
             ${runtime ? `<span class="modal-runtime">${runtime}</span>` : ''}
             <span class="modal-hd">HD</span>
-            ${movie.vote_count ? `<span class="modal-lang" style="color:#aaa;">${movie.vote_count.toLocaleString()} votes</span>` : ''}
+            ${isTV && seasons.length ? `<span style="color:#aaa;">${seasons.length} Season${seasons.length > 1 ? 's' : ''}</span>` : ''}
+            ${item.vote_count ? `<span class="modal-lang" style="color:#aaa;">${item.vote_count.toLocaleString()} votes</span>` : ''}
           </div>
-          <p class="modal-description">${movie.overview || 'No description available.'}</p>
+          <p class="modal-description">${item.overview || 'No description available.'}</p>
           ${genres.length ? `
           <div class="modal-genres">
             ${genres.map(g => `<span class="modal-genre-tag">${g}</span>`).join('')}
           </div>` : ''}
           <div class="modal-actions">
-            <a href="watch.html?id=${movie.id}" class="btn btn-primary">▶ Watch Now</a>
+            <a href="${watchUrl}" class="btn btn-primary">▶ Watch Now</a>
           </div>
         </div>
       </div>

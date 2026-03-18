@@ -517,6 +517,22 @@ body {
   background: rgba(255,255,255,0.8);
 }
 
+/* ===== TV BADGE ===== */
+.tv-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--red);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  z-index: 5;
+  text-transform: uppercase;
+}
+
 /* ===== WIDE CARD (16:9) ===== */
 .movie-card.wide {
   flex: 0 0 calc(25% - 6px);
@@ -1067,6 +1083,29 @@ footer {
 .bf-controls.visible {
   opacity: 1;
   pointer-events: all;
+}
+/* In fullscreen: hide controls + cursor when idle */
+.bf-player:fullscreen .bf-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+.bf-player:fullscreen .bf-controls.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+.bf-player:fullscreen.bf-idle {
+  cursor: none;
+}
+.bf-player:fullscreen.bf-idle .bf-controls {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.bf-player:fullscreen.bf-idle .bf-server-bar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.bf-player:fullscreen.bf-idle .bf-center-play {
+  opacity: 0 !important;
 }
 
 /* Progress bar */

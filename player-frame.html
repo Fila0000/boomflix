@@ -99,8 +99,11 @@ document.addEventListener('keydown', function(e) {
 var params = new URLSearchParams(window.location.search);
 var movieId = params.get('id');
 var serverIdx = parseInt(params.get('s') || '0');
+var mediaType = params.get('type') || 'movie';
+var season = params.get('season') || '1';
+var episode = params.get('episode') || '1';
 
-var SERVERS = [
+var MOVIE_SERVERS = [
   function(id) { return 'https://player.videasy.net/movie/' + id; },
   function(id) { return 'https://embed.su/embed/movie/' + id; },
   function(id) { return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1'; },
@@ -111,9 +114,20 @@ var SERVERS = [
   function(id) { return 'https://moviesapi.club/movie/' + id; },
 ];
 
+var TV_SERVERS = [
+  function(id, s, e) { return 'https://vidsrc.to/embed/tv/' + id + '/' + s + '/' + e; },
+  function(id, s, e) { return 'https://player.videasy.net/tv/' + id + '/' + s + '/' + e; },
+  function(id, s, e) { return 'https://www.2embed.cc/embed/' + id + '?s=' + s + '&e=' + e; },
+  function(id, s, e) { return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + s + '&e=' + e; },
+  function(id, s, e) { return 'https://autoembed.co/tv/tmdb/' + id + '-' + s + '-' + e; },
+];
+
+var SERVERS = mediaType === 'tv' ? TV_SERVERS : MOVIE_SERVERS;
+
 function loadServer(idx) {
   if (!movieId || idx >= SERVERS.length) return;
-  document.getElementById('player').innerHTML = '<iframe src="' + SERVERS[idx](movieId) + '" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>';
+  var url = mediaType === 'tv' ? SERVERS[idx](movieId, season, episode) : SERVERS[idx](movieId);
+  document.getElementById('player').innerHTML = '<iframe src="' + url + '" allowfullscreen allow="autoplay; fullscreen; encrypted-media; picture-in-picture"></iframe>';
   renderServers(idx);
 }
 

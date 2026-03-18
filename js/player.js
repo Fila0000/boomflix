@@ -6,6 +6,9 @@ const Player = {
   hls: null,
   video: null,
   movieId: null,
+  mediaType: 'movie', // 'movie' or 'tv'
+  season: 1,
+  episode: 1,
   streamData: null,
   hideControlsTimer: null,
   isMuted: false,
@@ -14,7 +17,7 @@ const Player = {
   // Stream source APIs (tried in order) — disabled, these CORS proxies are unreliable
   STREAM_APIS: [],
 
-  // Fallback embed iframes — ordered by reliability
+  // Fallback embed iframes — ordered by reliability (movies)
   FALLBACK_EMBEDS: [
     (id) => `https://player.videasy.net/movie/${id}`,
     (id) => `https://embed.su/embed/movie/${id}`,
@@ -26,8 +29,32 @@ const Player = {
     (id) => `https://moviesapi.club/movie/${id}`,
   ],
 
-  async init(movieId) {
+  // TV show embed iframes
+  TV_FALLBACK_EMBEDS: [
+    (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://player.videasy.net/tv/${id}/${s}/${e}`,
+    (id, s, e) => `https://www.2embed.cc/embed/${id}?s=${s}&e=${e}`,
+    (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
+    (id, s, e) => `https://autoembed.co/tv/tmdb/${id}-${s}-${e}`,
+  ],
+
+  getEmbeds() {
+    if (this.mediaType === 'tv') return this.TV_FALLBACK_EMBEDS;
+    return this.FALLBACK_EMBEDS;
+  },
+
+  getEmbedUrl(embedFn, idx) {
+    if (this.mediaType === 'tv') {
+      return embedFn(this.movieId, this.season, this.episode);
+    }
+    return embedFn(this.movieId);
+  },
+
+  async init(movieId, type = 'movie', season = 1, episode = 1) {
     this.movieId = movieId;
+    this.mediaType = type;
+    this.season = season;
+    this.episode = episode;
     this.renderShell();
     await this.tryNativeStream();
   },
@@ -237,7 +264,7 @@ const Player = {
 
   loadFallbackEmbed(idx) {
     const wrapper = document.getElementById('playerWrapper');
-    const embeds = this.FALLBACK_EMBEDS;
+    const embeds = this.getEmbeds();
     if (idx >= embeds.length) {
       this.showError('No streams available right now. Try again later.');
       return;
@@ -245,8 +272,12 @@ const Player = {
 
     this._currentEmbedIdx = idx;
 
-    // Open our clean player-frame page which blocks popups/redirects and embeds the stream
-    const playerUrl = `player-frame.html?id=${this.movieId}&s=${idx}`;
+    // Build player-frame URL with TV params if needed
+    let playerUrl = `player-frame.html?id=${this.movieId}&s=${idx}`;
+    if (this.mediaType === 'tv') {
+      playerUrl += `&type=tv&season=${this.season}&episode=${this.episode}`;
+    }
+
     wrapper.innerHTML = `
       <div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
         <div style="text-align:center;">
@@ -262,12 +293,15 @@ const Player = {
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">
           <span style="color:#aaa;font-size:0.75rem;">Server:</span>
-          ${this.FALLBACK_EMBEDS.map((_, i) => `
-            <button onclick="window.open('player-frame.html?id=${this.movieId}&s=${i}','_blank')"
+          ${embeds.map((_, i) => {
+            let srvUrl = `player-frame.html?id=${this.movieId}&s=${i}`;
+            if (this.mediaType === 'tv') srvUrl += `&type=tv&season=${this.season}&episode=${this.episode}`;
+            return `
+            <button onclick="window.open('${srvUrl}','_blank')"
               style="background:${i===idx?'#e50914':'rgba(255,255,255,0.15)'};border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
               ${i+1}
-            </button>
-          `).join('')}
+            </button>`;
+          }).join('')}
         </div>
       </div>
     `;
@@ -277,9 +311,10 @@ const Player = {
     const bar = document.getElementById('bfServerBar');
     const btns = document.getElementById('bfServerBtns');
     if (!bar || !btns) return;
+    const embeds = this.getEmbeds();
     btns.innerHTML = `
       <button class="bf-srv active" onclick="">Native</button>
-      ${this.FALLBACK_EMBEDS.map((_, i) => `
+      ${embeds.map((_, i) => `
         <button class="bf-srv" onclick="Player.loadFallbackEmbed(${i})">Server ${i+1}</button>
       `).join('')}
     `;
@@ -448,16 +483,26 @@ const Player = {
       }
     });
 
-    // Auto-hide controls
+    // Auto-hide controls + cursor in fullscreen
     const playerEl = document.getElementById('bfPlayer');
+    let idleTimer = null;
+
     const showControls = () => {
       controls?.classList.add('visible');
       document.getElementById('bfServerBar')?.classList.add('visible');
+      playerEl?.classList.remove('bf-idle');
       clearTimeout(this.hideControlsTimer);
+      clearTimeout(idleTimer);
       if (!video.paused) {
         this.hideControlsTimer = setTimeout(() => {
           controls?.classList.remove('visible');
           document.getElementById('bfServerBar')?.classList.remove('visible');
+        }, 3000);
+        // Hide cursor too in fullscreen after 3s idle
+        idleTimer = setTimeout(() => {
+          if (document.fullscreenElement) {
+            playerEl?.classList.add('bf-idle');
+          }
         }, 3000);
       }
     };
@@ -466,6 +511,7 @@ const Player = {
     playerEl?.addEventListener('mouseleave', () => {
       if (!video.paused) {
         clearTimeout(this.hideControlsTimer);
+        clearTimeout(idleTimer);
         controls?.classList.remove('visible');
         document.getElementById('bfServerBar')?.classList.remove('visible');
       }
@@ -548,8 +594,9 @@ const Player = {
     if (errMsg) errMsg.textContent = msg;
     this.hideSpinner();
     if (errActions) {
-      errActions.innerHTML = this.FALLBACK_EMBEDS.map((_, i) => `
-        <button onclick="Player.loadFallbackEmbed(${i})" 
+      const embeds = this.getEmbeds();
+      errActions.innerHTML = embeds.map((_, i) => `
+        <button onclick="Player.loadFallbackEmbed(${i})"
           style="background:rgba(255,255,255,0.15);border:none;color:white;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:0.85rem;margin:4px;">
           Try Server ${i+1}
         </button>
