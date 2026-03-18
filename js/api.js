@@ -312,6 +312,72 @@ const API = {
     return '';
   },
 
+  // Extract content descriptors (Violence, Nudity, Language, etc.)
+  getContentWarnings(movie) {
+    if (!movie) return [];
+    // From TMDB release_dates descriptors
+    if (movie.release_dates && movie.release_dates.results) {
+      const us = movie.release_dates.results.find(r => r.iso_3166_1 === 'US');
+      if (us && us.release_dates) {
+        for (const rd of us.release_dates) {
+          if (rd.descriptors && rd.descriptors.length > 0) {
+            return rd.descriptors;
+          }
+        }
+      }
+    }
+    // Fallback: generate detailed advisories from genre + rating
+    const cert = this.getCertification(movie);
+    const genres = (movie.genres || movie.genre_ids || []);
+    const genreIds = genres.map(g => typeof g === 'object' ? g.id : g);
+    const warnings = [];
+
+    if (cert === 'R' || cert === 'NC-17' || cert === 'TV-MA') {
+      warnings.push('Strong Language');
+      if (genreIds.includes(27)) warnings.push('Graphic Violence', 'Gore', 'Disturbing Images');
+      if (genreIds.includes(28)) warnings.push('Intense Action Violence');
+      if (genreIds.includes(53)) warnings.push('Suspense', 'Disturbing Scenes');
+      if (genreIds.includes(80)) warnings.push('Violence', 'Criminal Behavior');
+      if (genreIds.includes(10752)) warnings.push('War Violence', 'Graphic Battle Scenes');
+      if (genreIds.includes(10749)) warnings.push('Sexual Content', 'Nudity');
+      if (genreIds.includes(18)) warnings.push('Mature Themes', 'Drug Use');
+      if (genreIds.includes(35) && !genreIds.includes(27)) warnings.push('Crude Humor', 'Sexual References');
+      if (genreIds.includes(878)) warnings.push('Sci-Fi Violence');
+      if (warnings.length <= 1) warnings.push('Adult Content', 'Mature Themes');
+    } else if (cert === 'PG-13' || cert === 'TV-14') {
+      if (genreIds.includes(28)) warnings.push('Action Violence', 'Peril');
+      if (genreIds.includes(27)) warnings.push('Frightening Scenes', 'Some Violence');
+      if (genreIds.includes(53)) warnings.push('Suspense', 'Threat');
+      if (genreIds.includes(80)) warnings.push('Some Violence', 'Criminal Themes');
+      if (genreIds.includes(10749)) warnings.push('Brief Suggestive Content', 'Kissing');
+      if (genreIds.includes(10752)) warnings.push('War Violence');
+      if (genreIds.includes(878)) warnings.push('Sci-Fi Action');
+      warnings.push('Some Language');
+      if (genreIds.includes(18)) warnings.push('Thematic Elements');
+      if (genreIds.includes(35)) warnings.push('Rude Humor');
+    } else if (cert === 'PG' || cert === 'TV-PG') {
+      warnings.push('Mild Themes');
+      if (genreIds.includes(28) || genreIds.includes(12)) warnings.push('Mild Peril', 'Action');
+      if (genreIds.includes(16)) warnings.push('Cartoon Violence');
+      if (genreIds.includes(14)) warnings.push('Fantasy Action');
+      if (genreIds.includes(35)) warnings.push('Mild Humor');
+      warnings.push('Brief Mild Language');
+    } else if (cert === 'G' || cert === 'TV-G' || cert === 'TV-Y7') {
+      warnings.push('Suitable for All Ages');
+    } else {
+      // No cert — estimate from genres
+      if (genreIds.includes(27)) warnings.push('Violence', 'Frightening Scenes');
+      else if (genreIds.includes(28)) warnings.push('Action Violence');
+      else if (genreIds.includes(53)) warnings.push('Suspense', 'Threat');
+      else if (genreIds.includes(80)) warnings.push('Violence', 'Criminal Themes');
+      if (genreIds.includes(10749)) warnings.push('Romantic Content');
+      if (warnings.length === 0) warnings.push('General Audiences');
+    }
+
+    // Deduplicate
+    return [...new Set(warnings)];
+  },
+
   // Get the best YouTube trailer from videos data
   getTrailer(item) {
     if (!item || !item.videos || !item.videos.results) return null;

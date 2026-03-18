@@ -379,6 +379,9 @@ async function loadMoviePage() {
   // Trailer
   const trailer = API.getTrailer(movieData);
 
+  // Content warnings (Violence, Nudity, Language, etc.)
+  const warnings = API.getContentWarnings(movieData);
+
   document.getElementById('playerInfo').innerHTML = `
     <a href="javascript:history.back()" class="back-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -396,6 +399,11 @@ async function loadMoviePage() {
       <span style="border:1px solid #555;padding:1px 6px;font-size:0.7rem;border-radius:3px;color:#aaa;">HD</span>
       ${genres.slice(0, 3).map(g => `<span style="background:rgba(255,255,255,0.08);padding:3px 10px;border-radius:20px;font-size:0.75rem;">${g}</span>`).join('')}
     </div>
+    ${warnings.length > 0 ? `
+    <div class="content-warnings">
+      <span class="cw-label">Content Advisory:</span>
+      ${warnings.map(w => `<span class="cw-tag">${w}</span>`).join('')}
+    </div>` : ''}
     <div style="display:flex;gap:10px;margin:16px 0;">
       ${trailer ? `<button class="btn-watch-trailer" onclick="TrailerModal.open('${trailer.key}', '${movieData.title.replace(/'/g, "\\'")}')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>
@@ -477,6 +485,9 @@ async function loadTVPage() {
   // Trailer
   const trailer = API.getTrailer(showData);
 
+  // Content warnings
+  const warnings = API.getContentWarnings(showData);
+
   document.getElementById('playerInfo').innerHTML = `
     <a href="javascript:history.back()" class="back-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -494,6 +505,11 @@ async function loadTVPage() {
       <span style="border:1px solid #555;padding:1px 6px;font-size:0.7rem;border-radius:3px;color:#aaa;">HD</span>
       ${genres.slice(0, 3).map(g => `<span style="background:rgba(255,255,255,0.08);padding:3px 10px;border-radius:20px;font-size:0.75rem;">${g}</span>`).join('')}
     </div>
+    ${warnings.length > 0 ? `
+    <div class="content-warnings">
+      <span class="cw-label">Content Advisory:</span>
+      ${warnings.map(w => `<span class="cw-tag">${w}</span>`).join('')}
+    </div>` : ''}
     <div style="display:flex;gap:10px;margin:16px 0;">
       ${trailer ? `<button class="btn-watch-trailer" onclick="TrailerModal.open('${trailer.key}', '${title.replace(/'/g, "\\'")}')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>

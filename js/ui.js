@@ -1,5 +1,52 @@
 // ===== EMILYFLIX UI HELPERS =====
 
+// ===== MY LIST (localStorage) =====
+const MyList = {
+  KEY: 'emilyflix_mylist',
+
+  getAll() {
+    try { return JSON.parse(localStorage.getItem(this.KEY)) || []; }
+    catch { return []; }
+  },
+
+  has(id) {
+    return this.getAll().some(item => item.id == id);
+  },
+
+  add(item) {
+    const list = this.getAll();
+    if (list.some(i => i.id == item.id)) return;
+    list.unshift({
+      id: item.id,
+      title: item.title || item.name || '',
+      poster_path: item.poster_path,
+      backdrop_path: item.backdrop_path,
+      vote_average: item.vote_average,
+      release_date: item.release_date || item.first_air_date || '',
+      genre_ids: item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []),
+      media_type: item.media_type || (item.name && !item.title ? 'tv' : 'movie'),
+      overview: item.overview || '',
+      first_air_date: item.first_air_date || ''
+    });
+    localStorage.setItem(this.KEY, JSON.stringify(list));
+  },
+
+  remove(id) {
+    const list = this.getAll().filter(i => i.id != id);
+    localStorage.setItem(this.KEY, JSON.stringify(list));
+  },
+
+  toggle(item) {
+    if (this.has(item.id)) {
+      this.remove(item.id);
+      return false;
+    } else {
+      this.add(item);
+      return true;
+    }
+  }
+};
+
 function getMaturityFromGenres(genreIds) {
   if (!genreIds) return 'PG-13';
   if (genreIds.includes(27) || genreIds.includes(53)) return 'TV-MA';
@@ -53,7 +100,7 @@ const UI = {
           <button class="card-btn trailer-btn" title="Watch Trailer" data-id="${item.id}" data-type="${type}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16" fill="white" stroke="none"/></svg>
           </button>
-          <button class="card-btn add-btn" title="Add to My List">+</button>
+          <button class="card-btn add-btn${MyList.has(item.id) ? ' in-list' : ''}" title="${MyList.has(item.id) ? 'Remove from My List' : 'Add to My List'}">${MyList.has(item.id) ? '✓' : '+'}</button>
           <span class="card-btn-spacer"></span>
           <button class="card-btn info-btn" title="More Info">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -100,10 +147,15 @@ const UI = {
       }
     });
 
-    // Add to list button
+    // Add to list button (toggle)
     el.querySelector('.add-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      UI.toast('Added to My List');
+      const btn = e.currentTarget;
+      const added = MyList.toggle(item);
+      btn.textContent = added ? '✓' : '+';
+      btn.title = added ? 'Remove from My List' : 'Add to My List';
+      btn.classList.toggle('in-list', added);
+      UI.toast(added ? 'Added to My List' : 'Removed from My List');
     });
 
     // Card click -> open modal
@@ -273,6 +325,9 @@ const Modal = {
     // Trailer
     const trailer = API.getTrailer(item);
 
+    // Content warnings
+    const warnings = API.getContentWarnings(item);
+
     this.el.innerHTML = `
       <div class="modal">
         <button class="modal-close" onclick="Modal.close()">&#10005;</button>
@@ -306,6 +361,11 @@ const Modal = {
           ${genres.length ? `
           <div class="modal-genres">
             ${genres.map(g => `<span class="modal-genre-tag">${g}</span>`).join('')}
+          </div>` : ''}
+          ${warnings.length > 0 ? `
+          <div class="content-warnings">
+            <span class="cw-label">Content Advisory:</span>
+            ${warnings.map(w => `<span class="cw-tag">${w}</span>`).join('')}
           </div>` : ''}
           <div class="modal-actions">
             <a href="${watchUrl}" class="btn btn-primary">

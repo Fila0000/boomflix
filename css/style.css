@@ -655,6 +655,12 @@ a { color: inherit; }
   background: #e6e6e6;
 }
 
+.card-btn.add-btn.in-list {
+  border-color: var(--match-green);
+  color: var(--match-green);
+  background: rgba(70,211,105,0.15);
+}
+
 .card-btn-spacer {
   flex: 1;
 }
@@ -1679,4 +1685,41 @@ footer {
   border-radius: 50%;
   font-size: 0.7rem;
   font-weight: 800;
+}
+
+/* ===== CONTENT WARNINGS / ADVISORIES ===== */
+.content-warnings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid #e50914;
+  border-radius: 4px;
+}
+.cw-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+.cw-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(229,9,20,0.15);
+  border: 1px solid rgba(229,9,20,0.3);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f5a5a5;
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .content-warnings { padding: 8px 10px; gap: 6px; }
+  .cw-label { font-size: 0.7rem; }
+  .cw-tag { font-size: 0.65rem; padding: 2px 8px; }
 }
