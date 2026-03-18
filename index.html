@@ -216,6 +216,21 @@ async function loadSections() {
   await UI.renderSection(container, 'Romantic Favourites', () => API.byGenre(10749), false);
   await UI.renderSection(container, 'Dramas', () => API.byGenre(18), false);
   await UI.renderSection(container, 'Edge-of-Your-Seat Thrillers', () => API.byGenre(53), false);
+
+  // Slapstick & Stupid Funny — curated list of classic comedy films
+  await UI.renderSection(container, 'Stupid Funny & Slapstick', () => API.discover({
+    with_genres: '35',
+    with_keywords: '9673|5765|245863',
+    sort_by: 'vote_count.desc',
+    'vote_average.gte': 5.5
+  }), false);
+
+  // Spoof & Parody Movies
+  await UI.renderSection(container, 'Spoofs & Parody Movies', () => API.discover({
+    with_genres: '35',
+    with_keywords: '9823|3505',
+    sort_by: 'vote_count.desc'
+  }), false);
 }
 
 // ===== TOP 10 ROW =====
