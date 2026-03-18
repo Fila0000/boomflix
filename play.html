@@ -266,10 +266,17 @@
 
   <!-- Upload Section (shown when no ROM specified or upload=1) -->
   <div class="upload-section" id="uploadSection" style="display:none;">
+    <div id="gameUploadInfo" style="text-align:center; margin-bottom: 24px; display:none;">
+      <h2 id="uploadGameTitle" style="font-size: 1.6rem; font-weight: 700; margin-bottom: 8px;"></h2>
+      <span id="uploadConsoleTag" style="display:inline-block; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 4px; background: var(--red); color: #fff; text-transform: uppercase;"></span>
+    </div>
     <div class="upload-zone" id="uploadZone">
       <span class="upload-zone-icon">&#127918;</span>
-      <h2>Upload Your Own ROM</h2>
-      <p>Drag and drop a ROM file here, or click to browse.<br>Supports: .nes, .smc, .sfc, .z64, .n64, .gb, .gbc, .gba, .bin, .md, .gen, .iso, .cue, .pbp, .nds, .a26, .zip</p>
+      <h2 id="uploadHeading">Upload Your Own ROM</h2>
+      <p id="uploadDesc">Drag and drop a ROM file here, or click to browse.<br>Supports: .nes, .smc, .sfc, .z64, .n64, .gb, .gbc, .gba, .bin, .md, .gen, .iso, .cue, .pbp, .nds, .a26, .zip</p>
+      <div id="archiveHint" style="display:none; margin-bottom: 16px; padding: 12px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;">
+        <p style="color: #ccc; font-size: 0.85rem; margin: 0;">Download ROMs from <a href="https://archive.org/details/software" target="_blank" rel="noopener" style="color: var(--red); text-decoration: underline;">archive.org</a> or your preferred source, then drop the file here to play.</p>
+      </div>
       <span class="btn btn-primary">Browse Files</span>
       <input type="file" id="romFile" accept=".nes,.smc,.sfc,.z64,.n64,.v64,.gb,.gbc,.gba,.bin,.md,.gen,.sms,.iso,.cue,.pbp,.cso,.nds,.a26,.zip,.7z">
     </div>
@@ -405,7 +412,7 @@ const consoleName = params.get('console');
 const isUpload = params.get('upload');
 
 if (romUrl && core) {
-  // Direct play mode
+  // Direct play mode (ROM URL provided)
   document.getElementById('emulatorWrap').style.display = 'block';
   document.getElementById('titleBar').style.display = 'flex';
   document.getElementById('gameTitle').textContent = decodeURIComponent(title || 'Unknown Game');
@@ -423,8 +430,32 @@ if (romUrl && core) {
   const script = document.createElement('script');
   script.src = 'https://cdn.emulatorjs.org/v4.0.12/data/loader.js';
   document.body.appendChild(script);
+} else if (core && title) {
+  // Game selected but no ROM — show upload UI with game info
+  const gameTitle = decodeURIComponent(title);
+  const consoleDisplay = CONSOLE_NAMES[consoleName] || CONSOLE_NAMES[core] || core;
+
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('gameUploadInfo').style.display = 'block';
+  document.getElementById('uploadGameTitle').textContent = gameTitle;
+  document.getElementById('uploadConsoleTag').textContent = consoleDisplay;
+  document.getElementById('uploadHeading').textContent = `Upload your ${consoleDisplay} ROM to play ${gameTitle}`;
+  document.getElementById('uploadDesc').innerHTML = `Drag and drop your <strong>${gameTitle}</strong> ROM file here, or click to browse.`;
+  document.getElementById('archiveHint').style.display = 'block';
+  document.title = `${gameTitle} — EmilyFlix`;
+
+  // Pre-select the core so auto-detect uses it
+  const coreSelectEl = document.getElementById('coreSelect');
+  if (coreSelectEl) {
+    for (let i = 0; i < coreSelectEl.options.length; i++) {
+      if (coreSelectEl.options[i].value === core) {
+        coreSelectEl.selectedIndex = i;
+        break;
+      }
+    }
+  }
 } else {
-  // Upload mode
+  // Generic upload mode
   document.getElementById('uploadSection').style.display = 'block';
   document.title = 'Upload & Play — EmilyFlix';
 }
@@ -464,7 +495,13 @@ if (uploadZone) {
 
 function handleFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
-  let detectedCore = EXT_TO_CORE[ext] || null;
+  // If core was provided via URL params, use it; otherwise auto-detect
+  let detectedCore = core || EXT_TO_CORE[ext] || null;
+
+  // If core select has a value chosen, prefer that
+  if (coreSelect && coreSelect.value) {
+    detectedCore = coreSelect.value;
+  }
 
   if (!detectedCore) {
     // Show core selector
@@ -482,9 +519,11 @@ function handleFile(file) {
   }
 }
 
-function launchLocalROM(file, core) {
+function launchLocalROM(file, selectedCore) {
   const blobUrl = URL.createObjectURL(file);
-  const gameName = file.name.replace(/\.[^.]+$/, '');
+  // Use the game title from URL params if available, otherwise use filename
+  const gameName = (title ? decodeURIComponent(title) : file.name.replace(/\.[^.]+$/, ''));
+  const consoleDisplay = CONSOLE_NAMES[consoleName] || CONSOLE_NAMES[selectedCore] || selectedCore;
 
   // Hide upload, show emulator
   document.getElementById('uploadSection').style.display = 'none';
@@ -492,13 +531,13 @@ function launchLocalROM(file, core) {
   document.getElementById('emulatorWrap').style.display = 'block';
   document.getElementById('titleBar').style.display = 'flex';
   document.getElementById('gameTitle').textContent = gameName;
-  document.getElementById('consoleTag').textContent = CONSOLE_NAMES[core] || core;
+  document.getElementById('consoleTag').textContent = consoleDisplay;
   document.title = `${gameName} — EmilyFlix`;
 
   // Load EmulatorJS
   window.EJS_player = '#game';
   window.EJS_gameUrl = blobUrl;
-  window.EJS_core = core;
+  window.EJS_core = selectedCore;
   window.EJS_pathtodata = 'https://cdn.emulatorjs.org/v4.0.12/data/';
   window.EJS_color = '#e50914';
   window.EJS_startOnLoaded = true;
