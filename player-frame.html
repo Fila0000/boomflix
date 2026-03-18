@@ -45,9 +45,13 @@
 <div id="servers"></div>
 
 <script>
-// Block popups
+// =============================================
+// AD SHIELD — blocks popups, redirects, overlays
+// =============================================
+
+// Block popups aggressively
 window.open = function() { return null; };
-setInterval(function() { try { window.open = function() { return null; }; } catch(e){} }, 200);
+setInterval(function() { try { window.open = function() { return null; }; } catch(e){} }, 100);
 
 // Block focus stealing
 window.addEventListener('blur', function() { setTimeout(function() { window.focus(); }, 50); });
@@ -56,8 +60,48 @@ window.addEventListener('blur', function() { setTimeout(function() { window.focu
 var safeHref = window.location.href;
 setInterval(function() {
   if (window.location.href !== safeHref) window.location.href = safeHref;
-}, 300);
+}, 200);
 window.addEventListener('beforeunload', function(e) { e.preventDefault(); e.returnValue = ''; });
+
+// Block new tab/window via click hijacking
+document.addEventListener('click', function(e) {
+  var t = e.target;
+  // Allow clicks on our own UI elements
+  if (t.closest('#servers') || t.closest('#shield') || t.id === 'fsBtn') return;
+  // Allow clicks on the iframe itself (for play buttons etc)
+  if (t.tagName === 'IFRAME') return;
+  // Block everything else that tries to navigate away
+  var link = t.closest('a');
+  if (link && link.target === '_blank') { e.preventDefault(); e.stopPropagation(); return false; }
+}, true);
+
+// Block ad overlay divs injected into the page
+setInterval(function() {
+  var dominated = document.querySelectorAll('div[style*="z-index"]');
+  dominated.forEach(function(el) {
+    if (el.id === 'shield' || el.id === 'servers' || el.id === 'player') return;
+    var z = parseInt(window.getComputedStyle(el).zIndex);
+    if (z > 100 && el.parentElement === document.body) {
+      el.remove();
+    }
+  });
+  // Remove any injected iframes that aren't our player
+  var iframes = document.querySelectorAll('iframe');
+  iframes.forEach(function(f) {
+    if (!f.closest('#player')) f.remove();
+  });
+  // Remove any injected scripts from ad networks
+  var scripts = document.querySelectorAll('script[src*="pop"], script[src*="ads"], script[src*="track"]');
+  scripts.forEach(function(s) { s.remove(); });
+}, 500);
+
+// Block notification/permission requests
+if (window.Notification) { window.Notification.requestPermission = function() { return Promise.resolve('denied'); }; }
+
+// Nuke alert/confirm/prompt (ads sometimes use these)
+window.alert = function() {};
+window.confirm = function() { return false; };
+window.prompt = function() { return null; };
 
 // =============================================
 // FULLSCREEN
