@@ -373,7 +373,7 @@ async function loadMoviePage() {
   const maturity = certification || getMaturityFromGenres((movieData.genres || []).map(g => g.id));
 
   // RT-style score
-  const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+  const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#f0b429';
   const scoreLabel = matchPct >= 75 ? 'Fresh' : matchPct >= 50 ? 'Mixed' : 'Rotten';
 
   // Trailer
@@ -479,7 +479,7 @@ async function loadTVPage() {
   const maturity = certification || getMaturityFromGenres((showData.genres || []).map(g => g.id));
 
   // RT-style score
-  const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+  const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#f0b429';
   const scoreLabel = matchPct >= 75 ? 'Fresh' : matchPct >= 50 ? 'Mixed' : 'Rotten';
 
   // Trailer

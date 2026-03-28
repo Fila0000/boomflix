@@ -75,7 +75,7 @@ const UI = {
     const maturity = getMaturityFromGenres(item.genre_ids);
 
     // RT-style score color
-    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#f0b429';
     const scoreClass = matchPct >= 75 ? 'fresh' : matchPct >= 50 ? 'mixed' : 'rotten';
 
     // Content rating from TMDB data (if available from details fetch) or genre fallback
@@ -319,7 +319,7 @@ const Modal = {
     const maturityDisplay = certification || getMaturityFromGenres((item.genres || []).map(g => g.id));
 
     // RT-style score
-    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#e50914';
+    const scoreColor = matchPct >= 75 ? '#46d369' : matchPct >= 50 ? '#f5c518' : '#f0b429';
     const scoreLabel = matchPct >= 75 ? 'Fresh' : matchPct >= 50 ? 'Mixed' : 'Rotten';
 
     // Trailer

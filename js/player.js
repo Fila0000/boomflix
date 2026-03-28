@@ -147,7 +147,7 @@ const Player = {
 
         <!-- Error state -->
         <div class="bf-error" id="bfError" style="display:none;">
-          <svg viewBox="0 0 24 24" width="48" height="48"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#e50914"/></svg>
+          <svg viewBox="0 0 24 24" width="48" height="48"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#f0b429"/></svg>
           <p id="bfErrorMsg">Stream unavailable</p>
           <div id="bfErrorActions"></div>
         </div>
@@ -285,7 +285,7 @@ const Player = {
       <div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
         <div style="text-align:center;">
           <div onclick="window.open('${playerUrl}','_blank')" style="
-            width:100px;height:100px;border-radius:50%;background:rgba(229,9,20,0.9);
+            width:100px;height:100px;border-radius:50%;background:rgba(240,180,41,0.9);
             display:flex;align-items:center;justify-content:center;margin:0 auto 16px;cursor:pointer;
             transition:transform 0.2s;
           " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -301,7 +301,7 @@ const Player = {
             if (this.mediaType === 'tv') srvUrl += `&type=tv&season=${this.season}&episode=${this.episode}`;
             return `
             <button onclick="window.open('${srvUrl}','_blank')"
-              style="background:${i===idx?'#e50914':'rgba(255,255,255,0.15)'};border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
+              style="background:${i===idx?'#f0b429':'rgba(255,255,255,0.15)'};border:none;color:white;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;">
               ${i+1}
             </button>`;
           }).join('')}
