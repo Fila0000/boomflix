@@ -67,6 +67,23 @@
     :-webkit-full-screen #servers { opacity: 0; pointer-events: none; }
     :fullscreen .ad-tip { display: none; }
     :-webkit-full-screen .ad-tip { display: none; }
+
+    /* Aggressive QR code / ad overlay hiding */
+    div[class*="qr"], div[id*="qr"], div[class*="QR"], div[id*="QR"],
+    div[class*="overlay-ad"], div[class*="popup-ad"], div[class*="ad-overlay"],
+    div[class*="ad-container"], div[class*="ad_container"],
+    div[class*="interstitial"], div[class*="modal-ad"],
+    img[src*="qr"], img[src*="QR"], img[src*="qrcode"],
+    canvas[class*="qr"], canvas[id*="qr"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
   </style>
 </head>
 <body>
@@ -75,13 +92,35 @@
   <button class="close-tip" onclick="document.getElementById('adTip').style.display='none'">✕</button>
 </div>
 <div id="player"></div>
-<div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:60px;z-index:9998;cursor:pointer;background:transparent;" onclick="this.style.display='none';setTimeout(function(){document.getElementById('shield').style.display='block'},3000)"></div>
+<div id="shield" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;cursor:pointer;background:transparent;"></div>
 <div id="servers"></div>
 
 <script>
 // =============================================
 // AD SHIELD — blocks popups, redirects, overlays
 // =============================================
+
+// Shield: double-click to pass through, single click absorbed
+(function() {
+  var shield = document.getElementById('shield');
+  var lastClick = 0;
+  shield.addEventListener('click', function(e) {
+    var now = Date.now();
+    if (now - lastClick < 400) {
+      // Double-click: hide shield briefly, let click through
+      shield.style.display = 'none';
+      setTimeout(function() { shield.style.display = 'block'; }, 1000);
+    }
+    lastClick = now;
+    e.stopPropagation();
+    e.preventDefault();
+  });
+  // Re-enable shield every 1 second (in case something hides it)
+  setInterval(function() {
+    if (shield.style.display === 'none') return; // respect intentional hide
+    shield.style.display = 'block';
+  }, 1000);
+})();
 
 // Block popups aggressively
 window.open = function() { return null; };
@@ -166,6 +205,35 @@ if (window.PushManager) {
   PushManager.prototype.subscribe = function() { return Promise.reject('blocked'); };
 }
 
+// Periodic QR code / ad overlay remover (outside iframe)
+setInterval(function() {
+  // Remove any elements with QR-related attributes or content
+  var allEls = document.body.querySelectorAll('*');
+  for (var i = 0; i < allEls.length; i++) {
+    var el = allEls[i];
+    // Skip our own elements
+    if (el.closest('#player') || el.closest('#servers') || el.closest('#adTip') || el.id === 'shield') continue;
+    var cls = (el.className || '').toString().toLowerCase();
+    var eid = (el.id || '').toLowerCase();
+    var src = (el.src || '').toLowerCase();
+    // Check for QR code patterns
+    if (cls.indexOf('qr') !== -1 || eid.indexOf('qr') !== -1 ||
+        src.indexOf('qr') !== -1 || src.indexOf('qrcode') !== -1) {
+      el.remove();
+      continue;
+    }
+    // Check images specifically for QR patterns in src
+    if (el.tagName === 'IMG' && (src.indexOf('qr') !== -1 || src.indexOf('barcode') !== -1 || src.indexOf('scan') !== -1)) {
+      el.remove();
+      continue;
+    }
+    // Check for canvas elements that might be QR codes (small square canvases outside player)
+    if (el.tagName === 'CANVAS' && !el.closest('#player') && el.width < 300 && el.height < 300 && el.width === el.height) {
+      el.remove();
+    }
+  }
+}, 500);
+
 // Auto-dismiss the ad tip after 5 seconds
 setTimeout(function() {
   var tip = document.getElementById('adTip');
@@ -219,14 +287,14 @@ var episode = params.get('episode') || '1';
 // Detect mobile
 var isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent);
 
-// Mobile-optimized order: vidlink.pro first (works on mobile)
+// Server order: videasy.net first (fewest ads), then embed.su, then rest
 var MOVIE_SERVERS = isMobile ? [
+  function(id) { return 'https://player.videasy.net/movie/' + id; },
+  function(id) { return 'https://embed.su/embed/movie/' + id; },
   function(id) { return 'https://vidlink.pro/movie/' + id; },
   function(id) { return 'https://vidsrc.cc/v2/embed/movie/' + id; },
   function(id) { return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1'; },
   function(id) { return 'https://moviesapi.club/movie/' + id; },
-  function(id) { return 'https://player.videasy.net/movie/' + id; },
-  function(id) { return 'https://embed.su/embed/movie/' + id; },
   function(id) { return 'https://autoembed.co/movie/tmdb/' + id; },
   function(id) { return 'https://www.2embed.cc/embed/' + id; },
 ] : [
@@ -241,11 +309,11 @@ var MOVIE_SERVERS = isMobile ? [
 ];
 
 var TV_SERVERS = isMobile ? [
+  function(id, s, e) { return 'https://player.videasy.net/tv/' + id + '/' + s + '/' + e; },
+  function(id, s, e) { return 'https://embed.su/embed/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://vidlink.pro/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://vidsrc.cc/v2/embed/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://multiembed.mov/?video_id=' + id + '&tmdb=1&s=' + s + '&e=' + e; },
-  function(id, s, e) { return 'https://player.videasy.net/tv/' + id + '/' + s + '/' + e; },
-  function(id, s, e) { return 'https://embed.su/embed/tv/' + id + '/' + s + '/' + e; },
   function(id, s, e) { return 'https://autoembed.co/tv/tmdb/' + id + '-' + s + '-' + e; },
 ] : [
   function(id, s, e) { return 'https://player.videasy.net/tv/' + id + '/' + s + '/' + e; },
